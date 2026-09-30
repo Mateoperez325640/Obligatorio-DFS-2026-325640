@@ -17,3 +17,9 @@ export const crearCategoria = async (categoriaData) => {
 
   return categoria;
 };
+
+export const obtenerCategorias = async () => {
+    const categorias = await Categoria.find();
+
+    return categorias;
+};

@@ -1,4 +1,5 @@
 import { registrarUser, loginUser } from "../services/auth.service.js";
+import { generarToken } from "../utils/jwt.util.js";
 
 export const registro = async (req, res) => {
   try {
@@ -21,9 +22,12 @@ export const login = async (req, res) => {
 
     const user = await loginUser(username, password);
 
+    const token = generarToken(user);
+
     return res.status(200).json({
       message: "Login correcto",
       user,
+      token,
     });
   } catch (error) {
     return res.status(error.statusCode || 500).json({

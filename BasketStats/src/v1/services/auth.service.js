@@ -31,3 +31,23 @@ export const registrarUser = async (userData) => {
 
   return user;
 };
+
+export const loginUser = async (username, password) => {
+  const user = await User.findOne({ username }).select("+password");
+
+  if (!user) {
+    const error = new Error("Usuario o contraseña incorrectos");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const passwordValida = await bcrypt.compare(password, user.password);
+
+  if (!passwordValida) {
+    const error = new Error("Usuario o contraseña incorrectos");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  return user;
+};

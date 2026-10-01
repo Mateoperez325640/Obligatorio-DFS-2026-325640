@@ -3,9 +3,10 @@ import {
   obtenerEquipos,
   obtenerEquipoPorId,
   modificarEquipo,
+  eliminarEquipo,
 } from "../services/team.service.js";
 
-export const crear = async (req, res) => {
+export const crear = async (req, res, next) => {
   try {
     const equipo = await crearEquipo(req.body);
 
@@ -14,13 +15,11 @@ export const crear = async (req, res) => {
       equipo,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const obtenerTodos = async (req, res) => {
+export const obtenerTodos = async (req, res, next) => {
   try {
     const equipos = await obtenerEquipos();
 
@@ -28,13 +27,11 @@ export const obtenerTodos = async (req, res) => {
       equipos,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const obtenerPorId = async (req, res) => {
+export const obtenerPorId = async (req, res, next) => {
   try {
     const equipoId = req.params.id;
 
@@ -44,13 +41,11 @@ export const obtenerPorId = async (req, res) => {
       equipo,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const modificar = async (req, res) => {
+export const modificar = async (req, res, next) => {
   try {
     const equipoId = req.params.id;
 
@@ -61,8 +56,20 @@ export const modificar = async (req, res) => {
       equipo,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
+    return next(error);
+  }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    const equipoId = req.params.id;
+
+    await eliminarEquipo(equipoId);
+
+    return res.status(200).json({
+      message: "Equipo eliminado correctamente",
     });
+  } catch (error) {
+    return next(error);
   }
 };

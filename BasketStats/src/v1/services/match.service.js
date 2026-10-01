@@ -108,3 +108,18 @@ export const obtenerPartidosPaginados = async (
     totalPaginas: Math.ceil(total / limite),
   };
 };
+
+export const obtenerPartidoPorId = async (partidoId, userId) => {
+  const partido = await Partido.findOne({
+    _id: partidoId,
+    user: userId,
+  });
+
+  if (!partido) {
+    const error = new Error("Partido no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return partido;
+};

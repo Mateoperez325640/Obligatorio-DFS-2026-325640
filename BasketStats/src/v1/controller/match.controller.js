@@ -1,6 +1,7 @@
 import {
   crearPartido,
   obtenerPartidosPaginados,
+  obtenerPartidoPorId,
 } from "../services/match.service.js";
 
 export const crear = async (req, res, next) => {
@@ -34,6 +35,19 @@ export const obtenerTodos = async (req, res, next) => {
     });
 
     return res.status(200).json(resultado);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const obtenerPorId = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const partidoId = req.params.id;
+
+    const partido = await obtenerPartidoPorId(partidoId, userId);
+
+    return res.status(200).json(partido);
   } catch (error) {
     return next(error);
   }

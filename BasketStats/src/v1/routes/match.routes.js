@@ -5,6 +5,7 @@ import {
   obtenerPorId,
   modificar,
   eliminar,
+  generarResumenPartidoController,
 } from "../controller/match.controller.js";
 import autenticarToken from "../middleware/auth.middleware.js";
 import {
@@ -46,5 +47,12 @@ router.patch(
 router.delete("/:id", autenticarToken, validateParams(idParamSchema), eliminar);
 
 router.post("/", autenticarToken, validate(partidoBodySchema), crear);
+
+router.post(
+  "/:id/resumen",
+  autenticarToken,
+  validateParams(idParamSchema),
+  generarResumenPartidoController,
+);
 
 export default router;

@@ -213,3 +213,21 @@ export const eliminarPartido = async (partidoId, userId) => {
 
   return partidoEliminado;
 };
+
+export const obtenerPartidoParaResumen = async (partidoId, userId) => {
+  const partido = await Partido.findOne({
+    _id: partidoId,
+    user: userId,
+  })
+    .populate("localTeam", "name")
+    .populate("visitorTeam", "name")
+    .populate("category", "name");
+
+  if (!partido) {
+    const error = new Error("Partido no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return partido;
+};

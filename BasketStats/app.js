@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import connectMongo from "./src/v1/config/mongo.config.js";
+import { connectMongo } from "./src/v1/config/mongo.config.js";
 import routes from "./src/v1/routes/index.js";
 import { middlewareErrores } from "./src/v1/middleware/error.middleware.js";
 
@@ -18,12 +18,29 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/api", routes);
+//app.use("/api", routes);
+
+app.use(
+  "/api",
+
+  async (req, res, next) => {
+    try {
+      await connectMongo();
+      next();
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  routes,
+);
 
 app.use(middlewareErrores);
 
-connectMongo();
+//connectMongo();
 
 app.listen(PORT, () => {
   console.log(`Servidor levantado en el puerto ${PORT}`);
 });
+
+export default app;

@@ -25,3 +25,15 @@ export const obtenerJugadores = async () => {
 
   return jugadores;
 };
+
+export const obtenerJugadorPorId = async (jugadorId) => {
+  const jugador = await Jugador.findById(jugadorId);
+
+  if (!jugador) {
+    const error = new Error("Jugador no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return jugador;
+};

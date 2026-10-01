@@ -73,3 +73,38 @@ export const crearPartido = async (partidoData, userId) => {
 
   return partido;
 };
+
+export const obtenerPartidosPaginados = async (
+  userId,
+  { pagina, limite, localTeam, visitorTeam, category },
+) => {
+  const filtro = { user: userId };
+
+  if (localTeam !== undefined) {
+    filtro.localTeam = localTeam;
+  }
+
+  if (visitorTeam !== undefined) {
+    filtro.visitorTeam = visitorTeam;
+  }
+
+  if (category !== undefined) {
+    filtro.category = category;
+  }
+
+  const [partidos, total] = await Promise.all([
+    Partido.find(filtro)
+      .sort({ _id: -1 })
+      .skip((pagina - 1) * limite)
+      .limit(limite),
+    Partido.countDocuments(filtro),
+  ]);
+
+  return {
+    partidos,
+    pagina,
+    limite,
+    total,
+    totalPaginas: Math.ceil(total / limite),
+  };
+};

@@ -3,6 +3,7 @@ import cors from "cors";
 import "dotenv/config";
 import connectMongo from "./src/v1/config/mongo.config.js";
 import routes from "./src/v1/routes/index.js";
+import { middlewareErrores } from "./src/v1/middleware/error.middleware.js";
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api", routes);
+
+app.use(middlewareErrores);
 
 connectMongo();
 

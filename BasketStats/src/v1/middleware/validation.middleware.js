@@ -1,39 +1,38 @@
 import { mensajesJoi } from "../config/joi-message.js";
 
+export const validateRequest = (schema, reqKey) => {
+    return (req, res, next) => {
+        const objetoAValidar = req[reqKey];
+
+        const { error, value } = schema.validate(objetoAValidar, {
+            abortEarly: false,
+            messages: mensajesJoi,
+        });
+
+        if (error) {
+            return next(error);
+        }
+
+        if (reqKey === "query") {
+            res.locals.validatedQuery = value;
+        } else {
+            req[reqKey] = value;
+        }
+
+        return next();
+    };
+};
+
 const validate = (schema) => {
-  return (req, res, next) => {
-    const { error } = schema.validate(req.body, {
-      abortEarly: false,
-      messages: mensajesJoi,
-    });
-
-    if (error) {
-      return res.status(400).json({
-        message: "Error de validación",
-        errors: error.details.map((detail) => detail.message),
-      });
-    }
-
-    next();
-  };
+    return validateRequest(schema, "body");
 };
 
 export const validateParams = (schema) => {
-  return (req, res, next) => {
-    const { error } = schema.validate(req.params, {
-      abortEarly: false,
-      messages: mensajesJoi,
-    });
+    return validateRequest(schema, "params");
+};
 
-    if (error) {
-      return res.status(400).json({
-        message: "Error de validación",
-        errors: error.details.map((detail) => detail.message),
-      });
-    }
-
-    next();
-  };
+export const validateQuery = (schema) => {
+    return validateRequest(schema, "query");
 };
 
 export default validate;

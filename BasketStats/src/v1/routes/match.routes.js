@@ -3,6 +3,7 @@ import {
   crear,
   obtenerTodos,
   obtenerPorId,
+  modificar,
 } from "../controller/match.controller.js";
 import autenticarToken from "../middleware/auth.middleware.js";
 import {
@@ -10,7 +11,10 @@ import {
   validateParams,
   validateQuery,
 } from "../middleware/validation.middleware.js";
-import { partidoBodySchema } from "../schemas/match-body.schema.js";
+import {
+  partidoBodySchema,
+  modificarPartidoBodySchema,
+} from "../schemas/match-body.schema.js";
 import { listarPartidosQuerySchema } from "../schemas/match-query.schema.js";
 import { idParamSchema } from "../schemas/common.schema.js";
 
@@ -28,6 +32,14 @@ router.get(
   autenticarToken,
   validateParams(idParamSchema),
   obtenerPorId,
+);
+
+router.patch(
+  "/:id",
+  autenticarToken,
+  validateParams(idParamSchema),
+  validate(modificarPartidoBodySchema),
+  modificar,
 );
 
 router.post("/", autenticarToken, validate(partidoBodySchema), crear);

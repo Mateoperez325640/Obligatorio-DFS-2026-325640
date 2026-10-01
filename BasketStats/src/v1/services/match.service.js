@@ -123,3 +123,71 @@ export const obtenerPartidoPorId = async (partidoId, userId) => {
 
   return partido;
 };
+
+export const modificarPartido = async (partidoId, userId, data) => {
+  const partido = await Partido.findOne({
+    _id: partidoId,
+    user: userId,
+  });
+
+  if (!partido) {
+    const error = new Error("Partido no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const localTeam = data.localTeam ?? partido.localTeam.toString();
+  const visitorTeam = data.visitorTeam ?? partido.visitorTeam.toString();
+
+  if (localTeam === visitorTeam) {
+    const error = new Error(
+      "El equipo local y visitante no pueden ser iguales",
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (data.localTeam !== undefined) {
+    const existeLocal = await Equipo.findById(data.localTeam);
+
+    if (!existeLocal) {
+      const error = new Error("Equipo local no encontrado");
+      error.statusCode = 404;
+      throw error;
+    }
+  }
+
+  if (data.visitorTeam !== undefined) {
+    const existeVisitante = await Equipo.findById(data.visitorTeam);
+
+    if (!existeVisitante) {
+      const error = new Error("Equipo visitante no encontrado");
+      error.statusCode = 404;
+      throw error;
+    }
+  }
+
+  if (data.category !== undefined) {
+    const existeCategoria = await Categoria.findById(data.category);
+
+    if (!existeCategoria) {
+      const error = new Error("Categoría no encontrada");
+      error.statusCode = 404;
+      throw error;
+    }
+  }
+
+  const partidoModificado = await Partido.findOneAndUpdate(
+    {
+      _id: partidoId,
+      user: userId,
+    },
+    data,
+    {
+      returnDocument: "after",
+      runValidators: true,
+    },
+  );
+
+  return partidoModificado;
+};

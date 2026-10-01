@@ -3,6 +3,7 @@ import {
   crear,
   obtenerTodas,
   obtenerPorId,
+  modificar,
 } from "../controller/category.controller.js";
 import autenticarToken from "../middleware/auth.middleware.js";
 import soloAdmin from "../middleware/role.middleware.js";
@@ -29,6 +30,15 @@ router.post(
   soloAdmin,
   validate(categoriaBodySchema),
   crear,
+);
+
+router.patch(
+  "/:id",
+  autenticarToken,
+  soloAdmin,
+  validateParams(idParamSchema),
+  validate(categoriaBodySchema),
+  modificar,
 );
 
 export default router;

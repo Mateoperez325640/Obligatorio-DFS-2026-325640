@@ -6,13 +6,14 @@ import matchRoutes from "./match.routes.js";
 import categoryRoutes from "./category.routes.js";
 import teamRoutes from "./team.routes.js";
 import playerRoutes from "./player.routes.js";
+import apiExternaRoutes from "./api-externa.routes.js";
 
 const router = express.Router();
 
 router.get("/", (req, res) => {
-    res.status(200).json({
-        message: "BasketStats v1 funcionando correctamente"
-    });
+  res.status(200).json({
+    message: "BasketStats v1 funcionando correctamente",
+  });
 });
 
 router.use("/auth", authRoutes);
@@ -21,5 +22,6 @@ router.use("/matches", matchRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/teams", teamRoutes);
 router.use("/players", playerRoutes);
+router.use("/externa", apiExternaRoutes);
 
 export default router;

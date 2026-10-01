@@ -3,9 +3,10 @@ import {
   obtenerCategorias,
   obtenerCategoriaPorId,
   modificarCategoria,
+  eliminarCategoria,
 } from "../services/category.service.js";
 
-export const crear = async (req, res) => {
+export const crear = async (req, res, next) => {
   try {
     const categoria = await crearCategoria(req.body);
 
@@ -14,13 +15,11 @@ export const crear = async (req, res) => {
       categoria,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const obtenerTodas = async (req, res) => {
+export const obtenerTodas = async (req, res, next) => {
   try {
     const categorias = await obtenerCategorias();
 
@@ -28,13 +27,11 @@ export const obtenerTodas = async (req, res) => {
       categorias,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const obtenerPorId = async (req, res) => {
+export const obtenerPorId = async (req, res, next) => {
   try {
     const categoriaId = req.params.id;
 
@@ -44,13 +41,11 @@ export const obtenerPorId = async (req, res) => {
       categoria,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const modificar = async (req, res) => {
+export const modificar = async (req, res, next) => {
   try {
     const categoriaId = req.params.id;
 
@@ -61,8 +56,20 @@ export const modificar = async (req, res) => {
       categoria,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
+    return next(error);
+  }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    const categoriaId = req.params.id;
+
+    await eliminarCategoria(categoriaId);
+
+    return res.status(200).json({
+      message: "Categoría eliminada correctamente",
     });
+  } catch (error) {
+    return next(error);
   }
 };

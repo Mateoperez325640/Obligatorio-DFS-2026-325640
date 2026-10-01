@@ -1,4 +1,5 @@
 import Categoria from "../models/category.model.js";
+import Partido from "../models/match.model.js";
 
 export const crearCategoria = async (categoriaData) => {
   const { name } = categoriaData;
@@ -60,4 +61,30 @@ export const modificarCategoria = async (categoriaId, categoriaData) => {
   await categoria.save();
 
   return categoria;
+};
+
+export const eliminarCategoria = async (categoriaId) => {
+  const categoria = await Categoria.findById(categoriaId);
+
+  if (!categoria) {
+    const error = new Error("Categoría no encontrada");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const partidoConCategoria = await Partido.findOne({
+    category: categoriaId,
+  });
+
+  if (partidoConCategoria) {
+    const error = new Error(
+      "No se puede eliminar la categoría porque está siendo utilizada",
+    );
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const categoriaEliminada = await Categoria.findByIdAndDelete(categoriaId);
+
+  return categoriaEliminada;
 };

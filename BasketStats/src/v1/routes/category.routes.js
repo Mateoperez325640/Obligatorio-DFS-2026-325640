@@ -4,6 +4,7 @@ import {
   obtenerTodas,
   obtenerPorId,
   modificar,
+  eliminar,
 } from "../controller/category.controller.js";
 import autenticarToken from "../middleware/auth.middleware.js";
 import soloAdmin from "../middleware/role.middleware.js";
@@ -39,6 +40,14 @@ router.patch(
   validateParams(idParamSchema),
   validate(categoriaBodySchema),
   modificar,
+);
+
+router.delete(
+  "/:id",
+  autenticarToken,
+  soloAdmin,
+  validateParams(idParamSchema),
+  eliminar,
 );
 
 export default router;

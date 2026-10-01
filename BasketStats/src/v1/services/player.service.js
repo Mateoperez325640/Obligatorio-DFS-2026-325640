@@ -37,3 +37,30 @@ export const obtenerJugadorPorId = async (jugadorId) => {
 
   return jugador;
 };
+
+export const modificarJugador = async (jugadorId, jugadorData) => {
+  const { name, team } = jugadorData;
+
+  const jugador = await Jugador.findById(jugadorId);
+
+  if (!jugador) {
+    const error = new Error("Jugador no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const equipo = await Equipo.findById(team);
+
+  if (!equipo) {
+    const error = new Error("Equipo no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  jugador.name = name;
+  jugador.team = team;
+
+  await jugador.save();
+
+  return jugador;
+};

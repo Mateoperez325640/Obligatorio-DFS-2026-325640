@@ -3,6 +3,7 @@ import {
   crear,
   obtenerTodos,
   obtenerPorId,
+  modificar,
 } from "../controller/player.controller.js";
 import autenticarToken from "../middleware/auth.middleware.js";
 import soloAdmin from "../middleware/role.middleware.js";
@@ -29,6 +30,15 @@ router.post(
   soloAdmin,
   validate(jugadorBodySchema),
   crear,
+);
+
+router.patch(
+  "/:id",
+  autenticarToken,
+  soloAdmin,
+  validateParams(idParamSchema),
+  validate(jugadorBodySchema),
+  modificar,
 );
 
 export default router;

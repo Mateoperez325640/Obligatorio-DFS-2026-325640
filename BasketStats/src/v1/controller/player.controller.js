@@ -2,6 +2,7 @@ import {
   crearJugador,
   obtenerJugadores,
   obtenerJugadorPorId,
+  modificarJugador,
 } from "../services/player.service.js";
 
 export const crear = async (req, res) => {
@@ -40,6 +41,23 @@ export const obtenerPorId = async (req, res) => {
     const jugador = await obtenerJugadorPorId(jugadorId);
 
     return res.status(200).json({
+      jugador,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Error interno del servidor",
+    });
+  }
+};
+
+export const modificar = async (req, res) => {
+  try {
+    const jugadorId = req.params.id;
+
+    const jugador = await modificarJugador(jugadorId, req.body);
+
+    return res.status(200).json({
+      message: "Jugador modificado correctamente",
       jugador,
     });
   } catch (error) {

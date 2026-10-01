@@ -19,7 +19,19 @@ export const crearCategoria = async (categoriaData) => {
 };
 
 export const obtenerCategorias = async () => {
-    const categorias = await Categoria.find();
+  const categorias = await Categoria.find();
 
-    return categorias;
+  return categorias;
+};
+
+export const obtenerCategoriaPorId = async (categoriaId) => {
+  const categoria = await Categoria.findById(categoriaId);
+
+  if (!categoria) {
+    const error = new Error("Categoría no encontrada");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return categoria;
 };

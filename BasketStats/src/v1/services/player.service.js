@@ -64,3 +64,17 @@ export const modificarJugador = async (jugadorId, jugadorData) => {
 
   return jugador;
 };
+
+export const eliminarJugador = async (jugadorId) => {
+  const jugador = await Jugador.findById(jugadorId);
+
+  if (!jugador) {
+    const error = new Error("Jugador no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const jugadorEliminado = await Jugador.findByIdAndDelete(jugadorId);
+
+  return jugadorEliminado;
+};

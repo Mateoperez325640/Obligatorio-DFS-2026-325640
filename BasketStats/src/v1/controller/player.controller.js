@@ -3,9 +3,10 @@ import {
   obtenerJugadores,
   obtenerJugadorPorId,
   modificarJugador,
+  eliminarJugador,
 } from "../services/player.service.js";
 
-export const crear = async (req, res) => {
+export const crear = async (req, res, next) => {
   try {
     const jugador = await crearJugador(req.body);
 
@@ -14,13 +15,11 @@ export const crear = async (req, res) => {
       jugador,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const obtenerTodos = async (req, res) => {
+export const obtenerTodos = async (req, res, next) => {
   try {
     const jugadores = await obtenerJugadores();
 
@@ -28,13 +27,11 @@ export const obtenerTodos = async (req, res) => {
       jugadores,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const obtenerPorId = async (req, res) => {
+export const obtenerPorId = async (req, res, next) => {
   try {
     const jugadorId = req.params.id;
 
@@ -44,13 +41,11 @@ export const obtenerPorId = async (req, res) => {
       jugador,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const modificar = async (req, res) => {
+export const modificar = async (req, res, next) => {
   try {
     const jugadorId = req.params.id;
 
@@ -61,8 +56,20 @@ export const modificar = async (req, res) => {
       jugador,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
+    return next(error);
+  }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    const jugadorId = req.params.id;
+
+    await eliminarJugador(jugadorId);
+
+    return res.status(200).json({
+      message: "Jugador eliminado correctamente",
     });
+  } catch (error) {
+    return next(error);
   }
 };

@@ -1,4 +1,8 @@
-import { crearEquipo, obtenerEquipos } from "../services/team.service.js";
+import {
+  crearEquipo,
+  obtenerEquipos,
+  obtenerEquipoPorId,
+} from "../services/team.service.js";
 
 export const crear = async (req, res) => {
   try {
@@ -21,6 +25,22 @@ export const obtenerTodos = async (req, res) => {
 
     return res.status(200).json({
       equipos,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Error interno del servidor",
+    });
+  }
+};
+
+export const obtenerPorId = async (req, res) => {
+  try {
+    const equipoId = req.params.id;
+
+    const equipo = await obtenerEquipoPorId(equipoId);
+
+    return res.status(200).json({
+      equipo,
     });
   } catch (error) {
     return res.status(error.statusCode || 500).json({

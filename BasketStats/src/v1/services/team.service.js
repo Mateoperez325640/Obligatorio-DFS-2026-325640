@@ -23,3 +23,15 @@ export const obtenerEquipos = async () => {
 
   return equipos;
 };
+
+export const obtenerEquipoPorId = async (equipoId) => {
+  const equipo = await Equipo.findById(equipoId);
+
+  if (!equipo) {
+    const error = new Error("Equipo no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return equipo;
+};

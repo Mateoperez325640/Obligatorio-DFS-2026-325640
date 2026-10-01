@@ -17,3 +17,9 @@ export const crearEquipo = async (equipoData) => {
 
   return equipo;
 };
+
+export const obtenerEquipos = async () => {
+  const equipos = await Equipo.find();
+
+  return equipos;
+};

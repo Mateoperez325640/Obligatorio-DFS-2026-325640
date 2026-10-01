@@ -1,0 +1,4 @@
+URL_API = https://basket-stats-iota.vercel.app
+URL GitHub = https://github.com/Mateoperez325640/Obligatorio-DFS-2026-325640.git
+URL Vercel = https://vercel.com/ort17/basket-stats/C1YNyCuo5SbpAzMKFAzPTHnCXcyB
+URL Postman = https://documenter.getpostman.com/view/46860050/2sBYHNWNaj

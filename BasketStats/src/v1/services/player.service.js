@@ -19,3 +19,9 @@ export const crearJugador = async (jugadorData) => {
 
   return jugador;
 };
+
+export const obtenerJugadores = async () => {
+  const jugadores = await Jugador.find();
+
+  return jugadores;
+};

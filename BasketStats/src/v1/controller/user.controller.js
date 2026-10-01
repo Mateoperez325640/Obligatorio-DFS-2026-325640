@@ -1,6 +1,6 @@
 import { cambiarPlanUser } from "../services/user.service.js";
 
-export const cambiarPlan = async (req, res) => {
+export const cambiarPlan = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
@@ -11,8 +11,6 @@ export const cambiarPlan = async (req, res) => {
       user,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };

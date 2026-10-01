@@ -12,7 +12,10 @@ import validate, {
   validateParams,
 } from "../middleware/validation.middleware.js";
 import { idParamSchema } from "../schemas/common.schema.js";
-import { jugadorBodySchema } from "../schemas/player-body.schema.js";
+import {
+  jugadorBodySchema,
+  modificarJugadorBodySchema,
+} from "../schemas/player-body.schema.js";
 
 const router = express.Router();
 
@@ -38,7 +41,7 @@ router.patch(
   autenticarToken,
   soloAdmin,
   validateParams(idParamSchema),
-  validate(jugadorBodySchema),
+  validate(modificarJugadorBodySchema),
   modificar,
 );
 

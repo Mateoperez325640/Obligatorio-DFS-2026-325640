@@ -13,7 +13,7 @@ const partidoSchema = new mongoose.Schema({
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
+    ref: "Categoria",
     required: true,
   },
   localScore: {

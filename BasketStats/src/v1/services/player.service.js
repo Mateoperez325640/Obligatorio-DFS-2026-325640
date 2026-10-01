@@ -49,16 +49,21 @@ export const modificarJugador = async (jugadorId, jugadorData) => {
     throw error;
   }
 
-  const equipo = await Equipo.findById(team);
+  if (team !== undefined) {
+    const equipo = await Equipo.findById(team);
 
-  if (!equipo) {
-    const error = new Error("Equipo no encontrado");
-    error.statusCode = 404;
-    throw error;
+    if (!equipo) {
+      const error = new Error("Equipo no encontrado");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    jugador.team = team;
   }
 
-  jugador.name = name;
-  jugador.team = team;
+  if (name !== undefined) {
+    jugador.name = name;
+  }
 
   await jugador.save();
 

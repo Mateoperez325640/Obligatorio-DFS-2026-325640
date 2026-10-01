@@ -1,7 +1,7 @@
 import { registrarUser, loginUser } from "../services/auth.service.js";
 import { generarToken } from "../utils/jwt.util.js";
 
-export const registro = async (req, res) => {
+export const registro = async (req, res, next) => {
   try {
     const user = await registrarUser(req.body);
 
@@ -10,13 +10,11 @@ export const registro = async (req, res) => {
       user,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
 
@@ -30,8 +28,6 @@ export const login = async (req, res) => {
       token,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error interno del servidor",
-    });
+    return next(error);
   }
 };

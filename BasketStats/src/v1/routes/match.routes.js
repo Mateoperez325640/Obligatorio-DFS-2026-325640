@@ -4,6 +4,7 @@ import {
   obtenerTodos,
   obtenerPorId,
   modificar,
+  eliminar,
 } from "../controller/match.controller.js";
 import autenticarToken from "../middleware/auth.middleware.js";
 import {
@@ -41,6 +42,8 @@ router.patch(
   validate(modificarPartidoBodySchema),
   modificar,
 );
+
+router.delete("/:id", autenticarToken, validateParams(idParamSchema), eliminar);
 
 router.post("/", autenticarToken, validate(partidoBodySchema), crear);
 

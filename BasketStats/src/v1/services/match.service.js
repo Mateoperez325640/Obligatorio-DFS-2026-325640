@@ -191,3 +191,25 @@ export const modificarPartido = async (partidoId, userId, data) => {
 
   return partidoModificado;
 };
+
+export const eliminarPartido = async (partidoId, userId) => {
+  const partido = await Partido.findById(partidoId);
+
+  if (!partido) {
+    const error = new Error("Partido no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (partido.user.toString() !== userId.toString()) {
+    const error = new Error(
+      "No puede eliminar el partido porque no le pertenece",
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const partidoEliminado = await Partido.findByIdAndDelete(partidoId);
+
+  return partidoEliminado;
+};

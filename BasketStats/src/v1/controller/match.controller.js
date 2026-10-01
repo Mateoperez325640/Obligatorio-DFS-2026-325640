@@ -3,6 +3,7 @@ import {
   obtenerPartidosPaginados,
   obtenerPartidoPorId,
   modificarPartido,
+  eliminarPartido,
 } from "../services/match.service.js";
 
 export const crear = async (req, res, next) => {
@@ -64,6 +65,21 @@ export const modificar = async (req, res, next) => {
     return res.status(200).json({
       message: "Partido modificado correctamente",
       partido,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const partidoId = req.params.id;
+
+    await eliminarPartido(partidoId, userId);
+
+    return res.status(200).json({
+      message: "Partido eliminado correctamente",
     });
   } catch (error) {
     return next(error);

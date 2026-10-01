@@ -35,3 +35,29 @@ export const obtenerEquipoPorId = async (equipoId) => {
 
   return equipo;
 };
+
+export const modificarEquipo = async (equipoId, equipoData) => {
+  const { name } = equipoData;
+
+  const equipo = await Equipo.findById(equipoId);
+
+  if (!equipo) {
+    const error = new Error("Equipo no encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const existeEquipo = await Equipo.findOne({ name });
+
+  if (existeEquipo && existeEquipo.id !== equipo.id) {
+    const error = new Error("El equipo ya existe");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  equipo.name = name;
+
+  await equipo.save();
+
+  return equipo;
+};

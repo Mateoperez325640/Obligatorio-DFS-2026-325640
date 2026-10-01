@@ -2,6 +2,7 @@ import {
   crearEquipo,
   obtenerEquipos,
   obtenerEquipoPorId,
+  modificarEquipo,
 } from "../services/team.service.js";
 
 export const crear = async (req, res) => {
@@ -40,6 +41,23 @@ export const obtenerPorId = async (req, res) => {
     const equipo = await obtenerEquipoPorId(equipoId);
 
     return res.status(200).json({
+      equipo,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Error interno del servidor",
+    });
+  }
+};
+
+export const modificar = async (req, res) => {
+  try {
+    const equipoId = req.params.id;
+
+    const equipo = await modificarEquipo(equipoId, req.body);
+
+    return res.status(200).json({
+      message: "Equipo modificado correctamente",
       equipo,
     });
   } catch (error) {

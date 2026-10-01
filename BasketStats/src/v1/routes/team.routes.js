@@ -3,6 +3,7 @@ import {
   crear,
   obtenerTodos,
   obtenerPorId,
+  modificar,
 } from "../controller/team.controller.js";
 import autenticarToken from "../middleware/auth.middleware.js";
 import soloAdmin from "../middleware/role.middleware.js";
@@ -24,5 +25,14 @@ router.get(
 );
 
 router.post("/", autenticarToken, soloAdmin, validate(equipoBodySchema), crear);
+
+router.patch(
+  "/:id",
+  autenticarToken,
+  soloAdmin,
+  validateParams(idParamSchema),
+  validate(equipoBodySchema),
+  modificar,
+);
 
 export default router;

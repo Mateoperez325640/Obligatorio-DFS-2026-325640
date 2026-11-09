@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BasketStats - Pruebas AJAX</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1100px; margin: 25px auto; padding: 0 16px; line-height: 1.5; }
+        h1 { margin-bottom: 0; }
+        h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        section { border: 1px solid #ddd; padding: 15px; margin: 18px 0; border-radius: 7px; }
+        .campos { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+        label { display: flex; flex-direction: column; gap: 3px; font-size: 14px; }
+        input { padding: 7px; min-width: 150px; max-width: 260px; }
+        input.largo { min-width: 320px; }
+        button { padding: 8px 10px; margin: 4px 5px 4px 0; cursor: pointer; }
+        button.peligro { color: #a30000; }
+        pre { background: #f4f4f4; border: 1px solid #ddd; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 70px; }
+        .nota { color: #555; font-size: 14px; }
+        #estadoSesion { font-weight: bold; }
+        #estadoHttp { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>BasketStats - Pruebas AJAX</h1>
+    <p>HTML de pruebas para los endpoints existentes de nuestra API. Utiliza Axios, datos editables y muestra la respuesta del servidor.</p>
+    <p class="nota"><strong>Atención:</strong> la URL inicial es producción. Crear, editar, eliminar o cambiar de plan modifica la base de datos real. Los botones de eliminación piden confirmación.</p>
+
+    <section>
+        <h2>Configuración y sesión</h2>
+        <div class="campos">
+            <label>URL base de la API
+                <input class="largo" id="urlBase" value="https://basket-stats-iota.vercel.app/api/v1">
+            </label>
+        </div>
+        <p class="nota">Para probar el backend local, cambiar por <code>http://localhost:3000/api/v1</code> y ejecutar el servidor.</p>
+        <p id="estadoSesion">Sin iniciar sesión</p>
+        <button onclick="probar('salud')">GET /api/v1 (comprobar API)</button>
+        <button onclick="cerrarSesion()">Cerrar sesión local (olvidar token)</button>
+    </section>
+
+    <section>
+        <h2>1. Registro y login</h2>
+        <div class="campos">
+            <label>Nombre <input id="nombreRegistro" value="Prueba Frontend"></label>
+            <label>Username <input id="usuarioRegistro" value="pruebafront0911"></label>
+            <label>Email <input id="emailRegistro" type="email" value="pruebafront0911@example.com"></label>
+            <label>Contraseña <input id="passwordRegistro" type="password" value="123456"></label>
+            <label>Repetir contraseña <input id="confirmarRegistro" type="password" value="123456"></label>
+        </div>
+        <button onclick="probar('registro')">POST /auth/registrar</button>
+        <p class="nota">Si devuelve 409, cambiá username y email. Después podés iniciar sesión con ese usuario.</p>
+        <div class="campos">
+            <label>Username para login <input id="usuarioLogin" value="pruebafront0911"></label>
+            <label>Contraseña para login <input id="passwordLogin" type="password" value="123456"></label>
+        </div>
+        <button onclick="probar('login')">POST /auth/login</button>
+        <p class="nota">Para probar rutas de administrador, iniciá sesión con una cuenta admin. El token se guarda solo en memoria mientras esta página está abierta.</p>
+    </section>
+
+    <section>
+        <h2>2. Categorías (crear, modificar y eliminar: solo admin)</h2>
+        <div class="campos">
+            <label>ID categoría <input class="largo" id="categoriaId" placeholder="24 caracteres hexadecimales"></label>
+            <label>Nombre <input id="categoriaNombre" value="Amistoso"></label>
+        </div>
+        <button onclick="probar('categoriasListar')">GET /categories</button>
+        <button onclick="probar('categoriaObtener')">GET /categories/:id</button>
+        <button onclick="probar('categoriaCrear')">POST /categories</button>
+        <button onclick="probar('categoriaModificar')">PATCH /categories/:id</button>
+        <button class="peligro" onclick="probar('categoriaEliminar')">DELETE /categories/:id</button>
+        <p class="nota">Al listar, se completa automáticamente el ID con la primera categoría, si el campo está vacío. Revisalo antes de editar o eliminar.</p>
+    </section>
+
+    <section>
+        <h2>3. Equipos (crear, modificar y eliminar: solo admin)</h2>
+        <div class="campos">
+            <label>ID equipo <input class="largo" id="equipoId" placeholder="24 caracteres hexadecimales"></label>
+            <label>Nombre <input id="equipoNombre" value="Equipo de Prueba"></label>
+        </div>
+        <button onclick="probar('equiposListar')">GET /teams</button>
+        <button onclick="probar('equipoObtener')">GET /teams/:id</button>
+        <button onclick="probar('equipoCrear')">POST /teams</button>
+        <button onclick="probar('equipoModificar')">PATCH /teams/:id</button>
+        <button class="peligro" onclick="probar('equipoEliminar')">DELETE /teams/:id</button>
+    </section>
+
+    <section>
+        <h2>4. Jugadores (crear, modificar y eliminar: solo admin)</h2>
+        <div class="campos">
+            <label>ID jugador <input class="largo" id="jugadorId" placeholder="24 caracteres hexadecimales"></label>
+            <label>Nombre <input id="jugadorNombre" value="Jugador de Prueba"></label>
+            <label>ID equipo del jugador <input class="largo" id="jugadorEquipoId" placeholder="Primero listar equipos"></label>
+        </div>
+        <button onclick="probar('jugadoresListar')">GET /players</button>
+        <button onclick="probar('jugadorObtener')">GET /players/:id</button>
+        <button onclick="probar('jugadorCrear')">POST /players</button>
+        <button onclick="probar('jugadorModificar')">PATCH /players/:id</button>
+        <button class="peligro" onclick="probar('jugadorEliminar')">DELETE /players/:id</button>
+    </section>
+
+    <section>
+        <h2>5. Partidos (usuario autenticado)</h2>
+        <div class="campos">
+            <label>ID partido <input class="largo" id="partidoId" placeholder="24 caracteres hexadecimales"></label>
+            <label>ID equipo local <input class="largo" id="localTeam" placeholder="Primero listar equipos"></label>
+            <label>ID equipo visitante <input class="largo" id="visitorTeam" placeholder="Debe ser distinto al local"></label>
+            <label>ID categoría <input class="largo" id="partidoCategory" placeholder="Primero listar categorías"></label>
+            <label>Puntos local <input id="localScore" type="number" min="0" value="80"></label>
+            <label>Puntos visitante <input id="visitorScore" type="number" min="0" value="75"></label>
+            <label>Fecha <input id="partidoFecha" type="date" value="2026-11-09"></label>
+        </div>
+        <p class="nota">Para completar IDs automáticamente, ejecutá primero GET /teams y GET /categories. Para crear un partido se necesitan dos equipos diferentes. El plan Plus permite hasta 4 partidos.</p>
+        <div class="campos">
+            <label>Página <input id="pagina" type="number" min="1" value="1"></label>
+            <label>Límite <input id="limite" type="number" min="1" max="100" value="20"></label>
+            <label>Filtro ID local (opcional) <input class="largo" id="filtroLocal"></label>
+            <label>Filtro ID visitante (opcional) <input class="largo" id="filtroVisitante"></label>
+            <label>Filtro ID categoría (opcional) <input class="largo" id="filtroCategoria"></label>
+        </div>
+        <button onclick="probar('partidosListar')">GET /matches (paginación y filtros)</button>
+        <button onclick="probar('partidoObtener')">GET /matches/:id</button>
+        <button onclick="probar('partidoCrear')">POST /matches</button>
+        <button onclick="probar('partidoModificar')">PATCH /matches/:id (puntajes)</button>
+        <button class="peligro" onclick="probar('partidoEliminar')">DELETE /matches/:id</button>
+        <button onclick="probar('partidoResumen')">POST /matches/:id/resumen (IA)</button>
+    </section>
+
+    <section>
+        <h2>6. Plan Plus / Premium</h2>
+        <p class="nota">Este endpoint actualiza el plan del usuario autenticado de Plus a Premium. No es una prueba reversible desde la API.</p>
+        <button class="peligro" onclick="probar('plan')">PATCH /users/plan (cambio real de plan)</button>
+    </section>
+
+    <section>
+        <h2>7. API externa</h2>
+        <div class="campos"><label>Año <input id="anio" type="number" min="1" value="2026"></label></div>
+        <button onclick="probar('feriados')">GET /externa/feriados/:anio</button>
+    </section>
+
+    <section>
+        <h2>8. Algunas pruebas de error</h2>
+        <button onclick="probar('errorLogin')">Login incorrecto (401)</button>
+        <button onclick="probar('errorSinToken')">Categorías sin token (401)</button>
+        <button onclick="probar('errorId')">Categoría con ID inválido (400)</button>
+        <button onclick="probar('errorPartido')">Partido con equipos iguales (400)</button>
+        <p class="nota">El último caso requiere que hayas iniciado sesión y cargado un equipo y una categoría válidos. Los errores 403 y 404 se pueden comprobar con los botones normales usando un rol sin permiso o un ID inexistente.</p>
+    </section>
+
+    <section>
+        <h2>Resultado de la última solicitud</h2>
+        <p id="estadoHttp">Todavía no se realizó ninguna solicitud.</p>
+        <pre id="resultado">La respuesta aparecerá aquí.</pre>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // El token se guarda solo en esta página, no en localStorage.
+        let token = "";
+        let usuarioActual = null;
+
+        const valor = (id) => document.getElementById(id).value.trim();
+        const poner = (id, dato) => { document.getElementById(id).value = dato; };
+        const completarSiVacio = (id, dato) => {
+            if (!valor(id) && dato) poner(id, dato);
+        };
+
+        function idValido(idCampo) {
+            const id = valor(idCampo);
+            if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+                throw new Error("Ingresá un ID válido de MongoDB (24 caracteres) en el campo: " + idCampo);
+            }
+            return id;
+        }
+
+        function rutaId(recurso, idCampo) {
+            return `/${recurso}/${idValido(idCampo)}`;
+        }
+
+        function confirmarAccion(mensaje) {
+            if (!confirm(mensaje)) throw new Error("Operación cancelada por el usuario.");
+        }
+
+        function mostrarResultado(metodo, ruta, status, datos) {
+            document.getElementById("estadoHttp").textContent =
+                `${metodo.toUpperCase()} ${ruta} — HTTP ${status}`;
+            document.getElementById("resultado").textContent = JSON.stringify(datos, null, 2);
+        }
+
+        function mostrarErrorLocal(error) {
+            document.getElementById("estadoHttp").textContent = "No se envió la solicitud";
+            document.getElementById("resultado").textContent = error.message;
+        }
+
+        function actualizarSesion() {
+            document.getElementById("estadoSesion").textContent = usuarioActual
+                ? `Sesión: ${usuarioActual.username} — rol: ${usuarioActual.role} — plan: ${usuarioActual.plan}`
+                : "Sin iniciar sesión";
+        }
+
+        function cerrarSesion() {
+            token = "";
+            usuarioActual = null;
+            actualizarSesion();
+            document.getElementById("estadoHttp").textContent = "Sesión local cerrada";
+            document.getElementById("resultado").textContent = "Se eliminó el token de esta página. No existe endpoint de logout en el backend.";
+        }
+
+        // La misma función sirve para GET, POST, PATCH y DELETE.
+        async function peticion(metodo, ruta, datos, opciones = {}) {
+            const base = valor("urlBase").replace(/\/+$/, "");
+            const headers = {};
+            if (token && !opciones.sinToken) headers.Authorization = `Bearer ${token}`;
+
+            try {
+                const respuesta = await axios({
+                    method: metodo,
+                    url: base + ruta,
+                    data: datos,
+                    headers
+                });
+
+                // Se oculta el JWT en la pantalla; solo se guarda en memoria.
+                if (ruta === "/auth/login" && respuesta.data.token) {
+                    token = respuesta.data.token;
+                    usuarioActual = respuesta.data.user;
+                    actualizarSesion();
+                    mostrarResultado(metodo, ruta, respuesta.status, {
+                        ...respuesta.data,
+                        token: "[JWT recibido y guardado en memoria]"
+                    });
+                } else {
+                    mostrarResultado(metodo, ruta, respuesta.status, respuesta.data);
+                }
+
+                completarIds(ruta, respuesta.data);
+                return respuesta.data;
+            } catch (error) {
+                const estado = error.response ? error.response.status : "sin respuesta";
+                const datosError = error.response ? error.response.data : { error: error.message };
+                mostrarResultado(metodo, ruta, estado, datosError);
+                return null;
+            }
+        }
+
+        // Ayuda a copiar los IDs obtenidos desde la API a los campos de pruebas.
+        function completarIds(ruta, datos) {
+            if (!datos) return;
+
+            if (ruta === "/categories" && Array.isArray(datos.categorias)) {
+                completarSiVacio("categoriaId", datos.categorias[0]?._id);
+                completarSiVacio("partidoCategory", datos.categorias[0]?._id);
+            }
+            if (datos.categoria?._id) {
+                poner("categoriaId", datos.categoria._id);
+                completarSiVacio("partidoCategory", datos.categoria._id);
+            }
+
+            if (ruta === "/teams" && Array.isArray(datos.equipos)) {
+                completarSiVacio("equipoId", datos.equipos[0]?._id);
+                completarSiVacio("jugadorEquipoId", datos.equipos[0]?._id);
+                completarSiVacio("localTeam", datos.equipos[0]?._id);
+                completarSiVacio("visitorTeam", datos.equipos[1]?._id);
+            }
+            if (datos.equipo?._id) {
+                poner("equipoId", datos.equipo._id);
+                completarSiVacio("jugadorEquipoId", datos.equipo._id);
+                completarSiVacio("localTeam", datos.equipo._id);
+            }
+
+            if (ruta === "/players" && Array.isArray(datos.jugadores)) {
+                completarSiVacio("jugadorId", datos.jugadores[0]?._id);
+            }
+            if (datos.jugador?._id) poner("jugadorId", datos.jugador._id);
+
+            if (ruta.startsWith("/matches") && Array.isArray(datos.partidos)) {
+                completarSiVacio("partidoId", datos.partidos[0]?._id);
+            }
+            if (datos.partido?._id) poner("partidoId", datos.partido._id);
+        }
+
+        function datosPartido() {
+            const localTeam = idValido("localTeam");
+            const visitorTeam = idValido("visitorTeam");
+            const category = idValido("partidoCategory");
+            if (!valor("partidoFecha")) throw new Error("Ingresá una fecha para el partido.");
+            return {
+                localTeam,
+                visitorTeam,
+                category,
+                localScore: Number(valor("localScore")),
+                visitorScore: Number(valor("visitorScore")),
+                date: valor("partidoFecha")
+            };
+        }
+
+        async function probar(accion) {
+            try {
+                switch (accion) {
+                    case "salud":
+                        return await peticion("get", "/");
+                    case "registro": {
+                        const datos = {
+                            name: valor("nombreRegistro"),
+                            username: valor("usuarioRegistro"),
+                            email: valor("emailRegistro"),
+                            password: valor("passwordRegistro"),
+                            confirmPassword: valor("confirmarRegistro")
+                        };
+                        const respuesta = await peticion("post", "/auth/registrar", datos);
+                        if (respuesta) {
+                            poner("usuarioLogin", datos.username);
+                            poner("passwordLogin", datos.password);
+                        }
+                        return;
+                    }
+                    case "login":
+                        return await peticion("post", "/auth/login", {
+                            username: valor("usuarioLogin"),
+                            password: valor("passwordLogin")
+                        });
+
+                    case "categoriasListar": return await peticion("get", "/categories");
+                    case "categoriaObtener": return await peticion("get", rutaId("categories", "categoriaId"));
+                    case "categoriaCrear": return await peticion("post", "/categories", { name: valor("categoriaNombre") });
+                    case "categoriaModificar": return await peticion("patch", rutaId("categories", "categoriaId"), { name: valor("categoriaNombre") });
+                    case "categoriaEliminar":
+                        confirmarAccion("¿Eliminar esta categoría de la base de datos?");
+                        return await peticion("delete", rutaId("categories", "categoriaId"));
+
+                    case "equiposListar": return await peticion("get", "/teams");
+                    case "equipoObtener": return await peticion("get", rutaId("teams", "equipoId"));
+                    case "equipoCrear": return await peticion("post", "/teams", { name: valor("equipoNombre") });
+                    case "equipoModificar": return await peticion("patch", rutaId("teams", "equipoId"), { name: valor("equipoNombre") });
+                    case "equipoEliminar":
+                        confirmarAccion("¿Eliminar este equipo de la base de datos?");
+                        return await peticion("delete", rutaId("teams", "equipoId"));
+
+                    case "jugadoresListar": return await peticion("get", "/players");
+                    case "jugadorObtener": return await peticion("get", rutaId("players", "jugadorId"));
+                    case "jugadorCrear": return await peticion("post", "/players", {
+                        name: valor("jugadorNombre"), team: idValido("jugadorEquipoId")
+                    });
+                    case "jugadorModificar": return await peticion("patch", rutaId("players", "jugadorId"), {
+                        name: valor("jugadorNombre"), team: idValido("jugadorEquipoId")
+                    });
+                    case "jugadorEliminar":
+                        confirmarAccion("¿Eliminar este jugador de la base de datos?");
+                        return await peticion("delete", rutaId("players", "jugadorId"));
+
+                    case "partidosListar": {
+                        const parametros = new URLSearchParams();
+                        parametros.set("pagina", valor("pagina") || "1");
+                        parametros.set("limite", valor("limite") || "20");
+                        if (valor("filtroLocal")) parametros.set("localTeam", idValido("filtroLocal"));
+                        if (valor("filtroVisitante")) parametros.set("visitorTeam", idValido("filtroVisitante"));
+                        if (valor("filtroCategoria")) parametros.set("category", idValido("filtroCategoria"));
+                        return await peticion("get", "/matches?" + parametros.toString());
+                    }
+                    case "partidoObtener": return await peticion("get", rutaId("matches", "partidoId"));
+                    case "partidoCrear": return await peticion("post", "/matches", datosPartido());
+                    case "partidoModificar": return await peticion("patch", rutaId("matches", "partidoId"), {
+                        localScore: Number(valor("localScore")),
+                        visitorScore: Number(valor("visitorScore"))
+                    });
+                    case "partidoEliminar":
+                        confirmarAccion("¿Eliminar este partido de la base de datos?");
+                        return await peticion("delete", rutaId("matches", "partidoId"));
+                    case "partidoResumen": return await peticion("post", rutaId("matches", "partidoId") + "/resumen");
+
+                    case "plan":
+                        confirmarAccion("Esto cambiará tu plan Plus a Premium en la base de datos real. ¿Continuar?");
+                        return await peticion("patch", "/users/plan");
+                    case "feriados": return await peticion("get", "/externa/feriados/" + encodeURIComponent(valor("anio")));
+
+                    case "errorLogin": return await peticion("post", "/auth/login", {
+                        username: valor("usuarioLogin"), password: "passwordIncorrecta999"
+                    });
+                    case "errorSinToken": return await peticion("get", "/categories", undefined, { sinToken: true });
+                    case "errorId": return await peticion("get", "/categories/id-invalido");
+                    case "errorPartido": {
+                        const datos = datosPartido();
+                        datos.visitorTeam = datos.localTeam;
+                        return await peticion("post", "/matches", datos);
+                    }
+                    default: throw new Error("Prueba no reconocida: " + accion);
+                }
+            } catch (error) {
+                mostrarErrorLocal(error);
+            }
+        }
+    </script>
+</body>
+</html>

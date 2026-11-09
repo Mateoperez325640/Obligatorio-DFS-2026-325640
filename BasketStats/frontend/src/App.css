@@ -1,0 +1,114 @@
+#root {
+  min-height: 100vh;
+}
+
+.contenedor-principal {
+  min-height: 100vh;
+  background-color: #f4f5f7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.contenedor-principal h1 {
+  color: #e76f00;
+  font-size: 42px;
+  margin-bottom: 5px;
+}
+
+.contenedor-principal p {
+  color: #555;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login {
+  background-color: white;
+  padding: 35px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.login h2 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 25px;
+  color: #222;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.campo label {
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+.campo input {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.campo input:focus {
+  outline: none;
+  border-color: #e76f00;
+}
+
+.login button {
+  width: 100%;
+  padding: 12px;
+  background-color: #e76f00;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.login button:hover {
+  background-color: #c65e00;
+}
+
+.texto-enlace {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 0 !important;
+  font-size: 14px;
+}
+
+.texto-enlace a {
+  color: #e76f00;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.texto-enlace a:hover {
+  text-decoration: underline;
+}
+
+.error {
+  color: #dc3545 !important;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.mensaje-exito {
+  color: #198754 !important;
+  font-size: 14px;
+  text-align: center;
+}
+
+.login button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

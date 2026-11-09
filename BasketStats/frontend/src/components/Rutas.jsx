@@ -3,6 +3,8 @@ import { useSelector } from "react-redux";
 import Login from "./Login.jsx";
 import Registro from "./Registro.jsx";
 import Dashboard from "./Dashboard.jsx";
+import CrearPartido from "./CrearPartido.jsx";
+import EditarPartido from "./EditarPartido.jsx";
 
 const Rutas = () => {
   const usuario = useSelector((state) => state.sesion.usuario);
@@ -20,6 +22,20 @@ const Rutas = () => {
           <Route
             path="/dashboard"
             element={usuario ? <Dashboard /> : <Navigate to="/login" replace />}
+          />
+
+          <Route
+            path="/partidos/crear"
+            element={
+              usuario ? <CrearPartido /> : <Navigate to="/login" replace />
+            }
+          />
+
+          <Route
+            path="/partidos/editar/:id"
+            element={
+              usuario ? <EditarPartido /> : <Navigate to="/login" replace />
+            }
           />
 
           <Route path="*" element={<Navigate to="/login" replace />} />

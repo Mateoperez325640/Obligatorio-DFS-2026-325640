@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useDispatch } from "react-redux";
 import { loginApi } from "../services/authServices.js";
+import { iniciarSesionSlice } from "../redux/features/sesionSlice.js";
 
 const esquemaLogin = Yup.object({
   username: Yup.string()
@@ -20,14 +22,16 @@ function Login() {
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
 
+  const dispatch = useDispatch();
+
+  const navigate = useNavigate();
+
   const formik = useFormik({
     initialValues: {
       username: "",
       password: "",
     },
-
     validationSchema: esquemaLogin,
-
     onSubmit: async (valores) => {
       setMensaje("");
       setError("");
@@ -36,14 +40,13 @@ function Login() {
         const respuesta = await loginApi(valores);
 
         localStorage.setItem("token", respuesta.token);
+        localStorage.setItem("usuario", JSON.stringify(respuesta.user));
 
-        setMensaje(`Bienvenido, ${respuesta.user.name}`);
+        dispatch(iniciarSesionSlice(respuesta.user));
 
+        navigate("/dashboard");
       } catch (error) {
-        setError(
-          error.response?.data?.message ||
-          "No se pudo iniciar sesión"
-        );
+        setError(error.response?.data?.message || "No se pudo iniciar sesión");
       }
     },
   });
@@ -59,16 +62,12 @@ function Login() {
             type="text"
             id="username"
             name="username"
-            placeholder="Ingresá tu usuario"
             value={formik.values.username}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
           />
-
           {formik.touched.username && formik.errors.username && (
-            <small className="error">
-              {formik.errors.username}
-            </small>
+            <small className="error">{formik.errors.username}</small>
           )}
         </div>
 
@@ -78,34 +77,21 @@ function Login() {
             type="password"
             id="password"
             name="password"
-            placeholder="Ingresá tu contraseña"
             value={formik.values.password}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
           />
-
           {formik.touched.password && formik.errors.password && (
-            <small className="error">
-              {formik.errors.password}
-            </small>
+            <small className="error">{formik.errors.password}</small>
           )}
         </div>
 
-        {mensaje && (
-          <p className="mensaje-exito">{mensaje}</p>
-        )}
-
-        {error && (
-          <p className="error">{error}</p>
-        )}
+        {mensaje && <p className="mensaje-exito">{mensaje}</p>}
+        {error && <p className="error">{error}</p>}
 
         <button
           type="submit"
-          disabled={
-            !formik.dirty ||
-            !formik.isValid ||
-            formik.isSubmitting
-          }
+          disabled={!formik.dirty || !formik.isValid || formik.isSubmitting}
         >
           {formik.isSubmitting ? "Ingresando..." : "Ingresar"}
         </button>

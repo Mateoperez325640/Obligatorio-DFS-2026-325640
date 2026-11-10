@@ -23,3 +23,39 @@ export const obtenerCategoriasApi = async () => {
 
   return respuesta.data;
 };
+
+export const crearEquipoApi = async (datosEquipo) => {
+  const token = localStorage.getItem("token");
+
+  const respuesta = await api.post("/teams", datosEquipo, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return respuesta.data;
+};
+
+export const editarEquipoApi = async (idEquipo, datosEquipo) => {
+  const token = localStorage.getItem("token");
+
+  const respuesta = await api.patch(`/teams/${idEquipo}`, datosEquipo, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return respuesta.data;
+};
+
+export const eliminarEquipoApi = async (idEquipo) => {
+  const token = localStorage.getItem("token");
+
+  const respuesta = await api.delete(`/teams/${idEquipo}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return respuesta.data;
+};

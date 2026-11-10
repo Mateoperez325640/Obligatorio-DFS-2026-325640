@@ -110,6 +110,12 @@ function Dashboard() {
         <strong>Plan:</strong> {usuario.plan}
       </p>
 
+      {usuario.role === "admin" && (
+        <button type="button" onClick={() => navigate("/admin")}>
+          Panel de administración
+        </button>
+      )}
+
       <h3>Mis partidos</h3>
 
       <button type="button" onClick={() => navigate("/partidos/crear")}>

@@ -5,6 +5,8 @@ import Registro from "./Registro.jsx";
 import Dashboard from "./Dashboard.jsx";
 import CrearPartido from "./CrearPartido.jsx";
 import EditarPartido from "./EditarPartido.jsx";
+import AdminDashboard from "./AdminDashboard.jsx";
+import GestionEquipos from "./GestionEquipos.jsx";
 
 const Rutas = () => {
   const usuario = useSelector((state) => state.sesion.usuario);
@@ -35,6 +37,28 @@ const Rutas = () => {
             path="/partidos/editar/:id"
             element={
               usuario ? <EditarPartido /> : <Navigate to="/login" replace />
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              usuario?.role === "admin" ? (
+                <AdminDashboard />
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
+
+          <Route
+            path="/admin/equipos"
+            element={
+              usuario?.role === "admin" ? (
+                <GestionEquipos />
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
             }
           />
 

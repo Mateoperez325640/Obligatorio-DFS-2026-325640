@@ -8,6 +8,7 @@ import EditarPartido from "./EditarPartido.jsx";
 import AdminDashboard from "./AdminDashboard.jsx";
 import GestionEquipos from "./GestionEquipos.jsx";
 import GestionCategorias from "./GestionCategorias.jsx";
+import GestionJugadores from "./GestionJugadores.jsx";
 
 const Rutas = () => {
   const usuario = useSelector((state) => state.sesion.usuario);
@@ -68,6 +69,17 @@ const Rutas = () => {
             element={
               usuario?.role === "admin" ? (
                 <GestionCategorias />
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
+
+          <Route
+            path="/admin/jugadores"
+            element={
+              usuario?.role === "admin" ? (
+                <GestionJugadores />
               ) : (
                 <Navigate to="/dashboard" replace />
               )

@@ -21,7 +21,9 @@ function AdminDashboard() {
         Gestionar categorías
       </button>
 
-      <p>Próximamente: gestión de jugadores.</p>
+      <button type="button" onClick={() => navigate("/admin/jugadores")}>
+        Gestionar jugadores
+      </button>
 
       <button type="button" onClick={() => navigate("/dashboard")}>
         Volver al Dashboard

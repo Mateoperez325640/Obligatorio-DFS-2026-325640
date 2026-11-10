@@ -39,8 +39,10 @@ const esquemaPartido = Yup.object({
   date: Yup.string().required("Seleccioná una fecha"),
 });
 
-function EditarPartido() {
-  const { id } = useParams();
+function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
+  const { id: idRuta } = useParams();
+  const id = idPartido || idRuta;
+
   const navigate = useNavigate();
 
   const [equipos, setEquipos] = useState([]);
@@ -52,6 +54,10 @@ function EditarPartido() {
 
   useEffect(() => {
     const cargarDatos = async () => {
+      setCargando(true);
+      setError("");
+      setPartido(null);
+
       try {
         const respuestaPartidos = await obtenerPartidosApi();
         const respuestaEquipos = await obtenerEquiposApi();
@@ -79,6 +85,14 @@ function EditarPartido() {
     cargarDatos();
   }, [id]);
 
+  const volver = () => {
+    if (onVolver) {
+      onVolver();
+    } else {
+      navigate("/dashboard");
+    }
+  };
+
   const formik = useFormik({
     enableReinitialize: true,
 
@@ -105,7 +119,11 @@ function EditarPartido() {
 
         await editarPartidoApi(id, datosPartido);
 
-        navigate("/dashboard");
+        if (onPartidoActualizado) {
+          onPartidoActualizado();
+        } else {
+          navigate("/dashboard");
+        }
       } catch (error) {
         setErrorGuardar(
           error.response?.data?.errors?.[0] ||
@@ -124,7 +142,7 @@ function EditarPartido() {
     return (
       <div className="login">
         <p className="error">{error}</p>
-        <button onClick={() => navigate("/dashboard")}>
+        <button type="button" onClick={volver}>
           Volver al Dashboard
         </button>
       </div>
@@ -256,7 +274,7 @@ function EditarPartido() {
         </button>
       </form>
 
-      <button type="button" onClick={() => navigate("/dashboard")}>
+      <button type="button" onClick={volver}>
         Volver al Dashboard
       </button>
     </div>

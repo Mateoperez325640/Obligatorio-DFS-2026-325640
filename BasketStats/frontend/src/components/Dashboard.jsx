@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { cerrarSesionSlice } from "../redux/features/sesionSlice.js";
+import CrearPartido from "./CrearPartido.jsx";
+import EditarPartido from "./EditarPartido.jsx";
 import {
   obtenerPartidosApi,
   eliminarPartidoApi,
@@ -23,6 +25,10 @@ function Dashboard() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [eliminando, setEliminando] = useState(false);
+
+  const [mostrarCrearPartido, setMostrarCrearPartido] = useState(false);
+  const [idPartidoEditando, setIdPartidoEditando] = useState(null);
+  const [filtroCategoria, setFiltroCategoria] = useState("");
 
   useEffect(() => {
     const cargarPartidos = async () => {
@@ -48,6 +54,42 @@ function Dashboard() {
     cargarPartidos();
   }, []);
 
+  const partidoCreado = async () => {
+    setMostrarCrearPartido(false);
+    setError("");
+
+    try {
+      const respuestaPartidos = await obtenerPartidosApi();
+      setPartidos(respuestaPartidos);
+    } catch (error) {
+      setError("El partido se creó, pero no se pudo actualizar el listado.");
+    }
+  };
+
+  const partidoActualizado = async () => {
+    setIdPartidoEditando(null);
+    setError("");
+
+    try {
+      const respuestaPartidos = await obtenerPartidosApi();
+      setPartidos(respuestaPartidos);
+    } catch (error) {
+      setError(
+        "El partido se actualizó, pero no se pudo actualizar el listado.",
+      );
+    }
+  };
+
+  const seleccionarPartidoEditar = (idPartido) => {
+    setMostrarCrearPartido(false);
+
+    if (idPartidoEditando === idPartido) {
+      setIdPartidoEditando(null);
+    } else {
+      setIdPartidoEditando(idPartido);
+    }
+  };
+
   const eliminarPartido = async (idPartido) => {
     const confirmar = window.confirm(
       "¿Estás seguro de que querés eliminar este partido?",
@@ -63,6 +105,10 @@ function Dashboard() {
     try {
       await eliminarPartidoApi(idPartido);
 
+      if (idPartidoEditando === idPartido) {
+        setIdPartidoEditando(null);
+      }
+
       const respuestaPartidos = await obtenerPartidosApi();
       setPartidos(respuestaPartidos);
     } catch (error) {
@@ -73,6 +119,13 @@ function Dashboard() {
       setEliminando(false);
     }
   };
+
+  const partidosFiltrados = partidos
+    ? partidos.partidos.filter(
+        (partido) =>
+          filtroCategoria === "" || partido.category === filtroCategoria,
+      )
+    : [];
 
   const cerrarSesion = () => {
     localStorage.removeItem("token");
@@ -118,9 +171,40 @@ function Dashboard() {
 
       <h3>Mis partidos</h3>
 
-      <button type="button" onClick={() => navigate("/partidos/crear")}>
-        + Crear partido
+      <div className="campo">
+        <label htmlFor="filtroCategoria">Filtrar por categoría</label>
+
+        <select
+          id="filtroCategoria"
+          value={filtroCategoria}
+          onChange={(e) => setFiltroCategoria(e.target.value)}
+        >
+          <option value="">Todas las categorías</option>
+
+          {categorias.map((categoria) => (
+            <option key={categoria.id} value={categoria.id}>
+              {categoria.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => {
+          setIdPartidoEditando(null);
+          setMostrarCrearPartido(!mostrarCrearPartido);
+        }}
+      >
+        {mostrarCrearPartido ? "Ocultar formulario" : "+ Crear partido"}
       </button>
+
+      {mostrarCrearPartido && (
+        <CrearPartido
+          onPartidoCreado={partidoCreado}
+          onVolver={() => setMostrarCrearPartido(false)}
+        />
+      )}
 
       {cargando && <p>Cargando partidos...</p>}
 
@@ -132,11 +216,11 @@ function Dashboard() {
             <strong>Total de partidos:</strong> {partidos.total}
           </p>
 
-          {partidos.partidos.length === 0 ? (
-            <p>Todavía no tenés partidos registrados.</p>
+          {partidosFiltrados.length === 0 ? (
+            <p>No hay partidos para mostrar con el filtro seleccionado.</p>
           ) : (
             <div>
-              {partidos.partidos.map((partido) => {
+              {partidosFiltrados.map((partido) => {
                 const equipoLocal = equipos.find(
                   (equipo) => equipo.id === partido.localTeam,
                 );
@@ -184,9 +268,11 @@ function Dashboard() {
 
                     <button
                       type="button"
-                      onClick={() => navigate(`/partidos/editar/${partido.id}`)}
+                      onClick={() => seleccionarPartidoEditar(partido.id)}
                     >
-                      Editar partido
+                      {idPartidoEditando === partido.id
+                        ? "Ocultar edición"
+                        : "Editar partido"}
                     </button>
 
                     <button
@@ -196,6 +282,14 @@ function Dashboard() {
                     >
                       {eliminando ? "Procesando..." : "Eliminar partido"}
                     </button>
+
+                    {idPartidoEditando === partido.id && (
+                      <EditarPartido
+                        idPartido={partido.id}
+                        onPartidoActualizado={partidoActualizado}
+                        onVolver={() => setIdPartidoEditando(null)}
+                      />
+                    )}
                   </div>
                 );
               })}

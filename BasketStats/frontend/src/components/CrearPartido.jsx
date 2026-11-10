@@ -29,7 +29,7 @@ const esquemaPartido = Yup.object({
   date: Yup.string().required("Seleccioná una fecha"),
 });
 
-function CrearPartido() {
+function CrearPartido({ onPartidoCreado, onVolver }) {
   const [equipos, setEquipos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -78,7 +78,11 @@ function CrearPartido() {
 
         await crearPartidoApi(datosPartido);
 
-        navigate("/dashboard");
+        if (onPartidoCreado) {
+          onPartidoCreado();
+        } else {
+          navigate("/dashboard");
+        }
       } catch (error) {
         setErrorGuardar(
           error.response?.data?.errors?.[0] ||
@@ -101,7 +105,16 @@ function CrearPartido() {
     <div className="login">
       <h2>Crear partido</h2>
 
-      <button type="button" onClick={() => navigate("/dashboard")}>
+      <button
+        type="button"
+        onClick={() => {
+          if (onVolver) {
+            onVolver();
+          } else {
+            navigate("/dashboard");
+          }
+        }}
+      >
         Volver al Dashboard
       </button>
 
@@ -215,6 +228,7 @@ function CrearPartido() {
             <small className="error">{formik.errors.date}</small>
           )}
         </div>
+
         {errorGuardar && <p className="error">{errorGuardar}</p>}
 
         <button

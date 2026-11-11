@@ -9,6 +9,7 @@ import CrearPartido from "./CrearPartido.jsx";
 import EditarPartido from "./EditarPartido.jsx";
 import InformeUso from "./InformeUso.jsx";
 import CambioPlan from "./CambioPlan.jsx";
+import GraficoPartidos from "./GraficoPartidos.jsx";
 import {
   obtenerPartidosApi,
   eliminarPartidoApi,
@@ -339,6 +340,10 @@ function Dashboard() {
             </div>
           )}
         </>
+      )}
+
+      {!cargando && partidos && (
+        <GraficoPartidos partidos={partidos.partidos} equipos={equipos} />
       )}
 
       <button type="button" onClick={cerrarSesion}>

@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { cerrarSesionSlice } from "../redux/features/sesionSlice.js";
+import {
+  cerrarSesionSlice,
+  actualizarUsuarioSlice,
+} from "../redux/features/sesionSlice.js";
 import CrearPartido from "./CrearPartido.jsx";
 import EditarPartido from "./EditarPartido.jsx";
+import InformeUso from "./InformeUso.jsx";
+import CambioPlan from "./CambioPlan.jsx";
 import {
   obtenerPartidosApi,
   eliminarPartidoApi,
@@ -120,6 +125,28 @@ function Dashboard() {
     }
   };
 
+  const planCambiado = (usuarioActualizado) => {
+    if (!usuarioActualizado) {
+      setError("El backend no devolvió los datos del usuario actualizado.");
+      return;
+    }
+
+    const nuevosDatosUsuario = {
+      ...usuario,
+      ...usuarioActualizado,
+    };
+
+    localStorage.setItem("usuario", JSON.stringify(nuevosDatosUsuario));
+
+    dispatch(actualizarUsuarioSlice(nuevosDatosUsuario));
+    setError("");
+  };
+
+  const limiteAlcanzado =
+    usuario?.plan?.toLowerCase() === "plus" &&
+    partidos !== null &&
+    partidos.total >= 4;
+
   const partidosFiltrados = partidos
     ? partidos.partidos.filter(
         (partido) =>
@@ -169,6 +196,14 @@ function Dashboard() {
         </button>
       )}
 
+      {!cargando && partidos && (
+        <InformeUso plan={usuario.plan} cantidadPartidos={partidos.total} />
+      )}
+
+      {usuario.role !== "admin" && (
+        <CambioPlan plan={usuario.plan} onPlanCambiado={planCambiado} />
+      )}
+
       <h3>Mis partidos</h3>
 
       <div className="campo">
@@ -191,6 +226,7 @@ function Dashboard() {
 
       <button
         type="button"
+        disabled={cargando || (limiteAlcanzado && !mostrarCrearPartido)}
         onClick={() => {
           setIdPartidoEditando(null);
           setMostrarCrearPartido(!mostrarCrearPartido);
@@ -198,6 +234,13 @@ function Dashboard() {
       >
         {mostrarCrearPartido ? "Ocultar formulario" : "+ Crear partido"}
       </button>
+
+      {limiteAlcanzado && (
+        <p>
+          Alcanzaste el límite de 4 partidos de tu plan Plus. Para crear más
+          partidos, cambiá a Premium o eliminá alguno de los existentes.
+        </p>
+      )}
 
       {mostrarCrearPartido && (
         <CrearPartido
@@ -298,7 +341,9 @@ function Dashboard() {
         </>
       )}
 
-      <button onClick={cerrarSesion}>Cerrar sesión</button>
+      <button type="button" onClick={cerrarSesion}>
+        Cerrar sesión
+      </button>
     </div>
   );
 }

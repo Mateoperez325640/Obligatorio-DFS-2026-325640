@@ -41,9 +41,16 @@ const sesionSlice = createSlice({
     cerrarSesionSlice: (state) => {
       state.usuario = null;
     },
+    actualizarUsuarioSlice: (state, action) => {
+      state.usuario = {
+        ...state.usuario,
+        ...action.payload,
+      };
+    },
   },
 });
 
-export const { iniciarSesionSlice, cerrarSesionSlice } = sesionSlice.actions;
+export const { iniciarSesionSlice, cerrarSesionSlice, actualizarUsuarioSlice } =
+  sesionSlice.actions;
 
 export default sesionSlice.reducer;

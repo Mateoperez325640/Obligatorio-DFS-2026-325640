@@ -2,7 +2,7 @@ import Jugador from "../models/player.model.js";
 import Equipo from "../models/team.model.js";
 
 export const crearJugador = async (jugadorData) => {
-  const { name, team } = jugadorData;
+  const { name, team, image } = jugadorData;
 
   const equipo = await Equipo.findById(team);
 
@@ -15,6 +15,7 @@ export const crearJugador = async (jugadorData) => {
   const jugador = await Jugador.create({
     name,
     team,
+    image,
   });
 
   return jugador;
@@ -39,7 +40,7 @@ export const obtenerJugadorPorId = async (jugadorId) => {
 };
 
 export const modificarJugador = async (jugadorId, jugadorData) => {
-  const { name, team } = jugadorData;
+  const { name, team, image } = jugadorData;
 
   const jugador = await Jugador.findById(jugadorId);
 
@@ -63,6 +64,10 @@ export const modificarJugador = async (jugadorId, jugadorData) => {
 
   if (name !== undefined) {
     jugador.name = name;
+  }
+
+  if (image !== undefined) {
+    jugador.image = image;
   }
 
   await jugador.save();

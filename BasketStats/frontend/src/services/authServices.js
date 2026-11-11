@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://basket-stats-iota.vercel.app/api/v1",
+  baseURL: import.meta.env.DEV
+    ? "http://localhost:3000/api/v1"
+    : "https://basket-stats-iota.vercel.app/api/v1",
   headers: {
     "Content-Type": "application/json",
   },

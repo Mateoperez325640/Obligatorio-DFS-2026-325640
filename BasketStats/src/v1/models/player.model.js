@@ -10,6 +10,10 @@ const jugadorSchema = new mongoose.Schema({
     ref: "Team",
     required: true,
   },
+  image: {
+    type: String,
+    default: "",
+  },
 });
 
 jugadorSchema.set("toJSON", {

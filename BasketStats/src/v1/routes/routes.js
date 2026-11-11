@@ -7,6 +7,7 @@ import categoryRoutes from "./category.routes.js";
 import teamRoutes from "./team.routes.js";
 import playerRoutes from "./player.routes.js";
 import apiExternaRoutes from "./api-externa.routes.js";
+import imageRoutes from "./image.routes.js";
 
 const router = express.Router();
 
@@ -23,5 +24,6 @@ router.use("/categories", categoryRoutes);
 router.use("/teams", teamRoutes);
 router.use("/players", playerRoutes);
 router.use("/externa", apiExternaRoutes);
+router.use("/images", imageRoutes);
 
 export default router;

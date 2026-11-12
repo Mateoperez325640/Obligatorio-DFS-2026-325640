@@ -253,9 +253,7 @@ function Dashboard() {
         </button>
       )}
 
-      {!cargando && datosCargados && (
-        <InformeUso plan={usuario.plan} cantidadPartidos={totalPartidos} />
-      )}
+      {!cargando && datosCargados && <InformeUso />}
 
       {usuario.role !== "admin" && (
         <CambioPlan plan={usuario.plan} onPlanCambiado={planCambiado} />

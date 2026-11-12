@@ -1,5 +1,11 @@
-function InformeUso({ plan, cantidadPartidos }) {
+import { useSelector } from "react-redux";
+
+function InformeUso() {
+  const usuario = useSelector((state) => state.sesion.usuario);
+  const cantidadPartidos = useSelector((state) => state.partidos.total);
+
   const limitePlus = 4;
+  const plan = usuario?.plan;
   const planActual = plan?.toLowerCase();
 
   const porcentajeUso = (cantidadPartidos / limitePlus) * 100;

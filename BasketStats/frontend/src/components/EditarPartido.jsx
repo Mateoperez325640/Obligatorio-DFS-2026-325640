@@ -12,6 +12,7 @@ import {
   editarPartidoApi,
 } from "../services/partidosServices.js";
 import { actualizarPartidoSlice } from "../redux/features/partidosSlice.js";
+import { cargarCatalogosSlice } from "../redux/features/catalogosSlice.js";
 
 const esquemaPartido = Yup.object({
   localTeam: Yup.string().required("Seleccioná el equipo local"),
@@ -52,8 +53,9 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
     state.partidos.lista.find((partido) => partido.id === id),
   );
 
-  const [equipos, setEquipos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+  const equipos = useSelector((state) => state.catalogos.equipos);
+  const categorias = useSelector((state) => state.catalogos.categorias);
+
   const [partido, setPartido] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -89,14 +91,27 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
           return;
         }
 
-        const respuestaEquipos = await obtenerEquiposApi();
-        const respuestaCategorias = await obtenerCategoriasApi();
+        if (equipos.length === 0 || categorias.length === 0) {
+          const respuestaEquipos = await obtenerEquiposApi();
+          const respuestaCategorias = await obtenerCategoriasApi();
 
-        if (
-          !Array.isArray(respuestaEquipos?.equipos) ||
-          !Array.isArray(respuestaCategorias?.categorias)
-        ) {
-          throw new Error("La API devolvió catálogos inválidos.");
+          if (
+            !Array.isArray(respuestaEquipos?.equipos) ||
+            !Array.isArray(respuestaCategorias?.categorias)
+          ) {
+            throw new Error("La API devolvió catálogos inválidos.");
+          }
+
+          if (!activo) {
+            return;
+          }
+
+          dispatch(
+            cargarCatalogosSlice({
+              equipos: respuestaEquipos.equipos,
+              categorias: respuestaCategorias.categorias,
+            }),
+          );
         }
 
         if (!activo) {
@@ -104,8 +119,6 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
         }
 
         setPartido(partidoEncontrado);
-        setEquipos(respuestaEquipos.equipos);
-        setCategorias(respuestaCategorias.categorias);
       } catch (error) {
         if (activo) {
           setError("No se pudieron cargar los datos del partido.");
@@ -122,7 +135,7 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
     return () => {
       activo = false;
     };
-  }, [id, partidoEnStore]);
+  }, [id, partidoEnStore, equipos.length, categorias.length, dispatch]);
 
   const volver = () => {
     if (onVolver) {
@@ -192,6 +205,19 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
     return (
       <div className="login">
         <p className="error">{error}</p>
+        <button type="button" onClick={volver}>
+          Volver al Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  if (equipos.length === 0 || categorias.length === 0) {
+    return (
+      <div className="login">
+        <p className="error">
+          No hay equipos o categorías disponibles para editar el partido.
+        </p>
         <button type="button" onClick={volver}>
           Volver al Dashboard
         </button>

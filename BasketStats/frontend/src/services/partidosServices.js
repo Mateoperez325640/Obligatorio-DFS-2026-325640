@@ -1,9 +1,32 @@
 import api from "./authServices.js";
 
-export const obtenerPartidosApi = async () => {
+export const obtenerPartidosApi = async ({
+  pagina = 1,
+  limite = 20,
+  category = "",
+} = {}) => {
   const token = localStorage.getItem("token");
 
+  const params = { pagina, limite };
+
+  if (category) {
+    params.category = category;
+  }
+
   const respuesta = await api.get("/matches", {
+    params,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return respuesta.data;
+};
+
+export const obtenerPartidoPorIdApi = async (idPartido) => {
+  const token = localStorage.getItem("token");
+
+  const respuesta = await api.get(`/matches/${idPartido}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

@@ -8,7 +8,7 @@ import {
   obtenerCategoriasApi,
 } from "../services/catalogosServices.js";
 import {
-  obtenerPartidosApi,
+  obtenerPartidoPorIdApi,
   editarPartidoApi,
 } from "../services/partidosServices.js";
 import { buscarFeriadoPorFecha } from "../services/feriadosServices.js";
@@ -74,15 +74,13 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
         let partidoEncontrado = partidoEnStore;
 
         if (!partidoEncontrado) {
-          const respuestaPartidos = await obtenerPartidosApi();
+          const respuestaPartido = await obtenerPartidoPorIdApi(id);
 
-          if (!Array.isArray(respuestaPartidos?.partidos)) {
-            throw new Error("La API devolvió partidos inválidos.");
+          if (!respuestaPartido?.id || respuestaPartido.id !== id) {
+            throw new Error("La API devolvió un partido inválido.");
           }
 
-          partidoEncontrado = respuestaPartidos.partidos.find(
-            (partido) => partido.id === id,
-          );
+          partidoEncontrado = respuestaPartido;
         }
 
         if (!partidoEncontrado) {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   obtenerEquiposApi,
@@ -10,6 +11,7 @@ import {
   obtenerPartidosApi,
   editarPartidoApi,
 } from "../services/partidosServices.js";
+import { actualizarPartidoSlice } from "../redux/features/partidosSlice.js";
 
 const esquemaPartido = Yup.object({
   localTeam: Yup.string().required("Seleccioná el equipo local"),
@@ -44,6 +46,11 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
   const id = idPartido || idRuta;
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const partidoEnStore = useSelector((state) =>
+    state.partidos.lista.find((partido) => partido.id === id),
+  );
 
   const [equipos, setEquipos] = useState([]);
   const [categorias, setCategorias] = useState([]);
@@ -53,22 +60,46 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
   const [errorGuardar, setErrorGuardar] = useState("");
 
   useEffect(() => {
+    let activo = true;
+
     const cargarDatos = async () => {
       setCargando(true);
       setError("");
       setPartido(null);
 
       try {
-        const respuestaPartidos = await obtenerPartidosApi();
+        let partidoEncontrado = partidoEnStore;
+
+        if (!partidoEncontrado) {
+          const respuestaPartidos = await obtenerPartidosApi();
+
+          if (!Array.isArray(respuestaPartidos?.partidos)) {
+            throw new Error("La API devolvió partidos inválidos.");
+          }
+
+          partidoEncontrado = respuestaPartidos.partidos.find(
+            (partido) => partido.id === id,
+          );
+        }
+
+        if (!partidoEncontrado) {
+          if (activo) {
+            setError("No se encontró el partido.");
+          }
+          return;
+        }
+
         const respuestaEquipos = await obtenerEquiposApi();
         const respuestaCategorias = await obtenerCategoriasApi();
 
-        const partidoEncontrado = respuestaPartidos.partidos.find(
-          (partido) => partido.id === id,
-        );
+        if (
+          !Array.isArray(respuestaEquipos?.equipos) ||
+          !Array.isArray(respuestaCategorias?.categorias)
+        ) {
+          throw new Error("La API devolvió catálogos inválidos.");
+        }
 
-        if (!partidoEncontrado) {
-          setError("No se encontró el partido.");
+        if (!activo) {
           return;
         }
 
@@ -76,14 +107,22 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
         setEquipos(respuestaEquipos.equipos);
         setCategorias(respuestaCategorias.categorias);
       } catch (error) {
-        setError("No se pudieron cargar los datos del partido.");
+        if (activo) {
+          setError("No se pudieron cargar los datos del partido.");
+        }
       } finally {
-        setCargando(false);
+        if (activo) {
+          setCargando(false);
+        }
       }
     };
 
     cargarDatos();
-  }, [id]);
+
+    return () => {
+      activo = false;
+    };
+  }, [id, partidoEnStore]);
 
   const volver = () => {
     if (onVolver) {
@@ -117,7 +156,18 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
           visitorScore: Number(valores.visitorScore),
         };
 
-        await editarPartidoApi(id, datosPartido);
+        const respuesta = await editarPartidoApi(id, datosPartido);
+        const partidoActualizado = respuesta?.partido;
+
+        if (!partidoActualizado?.id || partidoActualizado.id !== id) {
+          setErrorGuardar(
+            "El servidor no devolvió los datos del partido actualizado. " +
+              "Actualizá la página para verificar los cambios.",
+          );
+          return;
+        }
+
+        dispatch(actualizarPartidoSlice(partidoActualizado));
 
         if (onPartidoActualizado) {
           onPartidoActualizado();

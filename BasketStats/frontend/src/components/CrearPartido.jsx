@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   obtenerEquiposApi,
   obtenerCategoriasApi,
 } from "../services/catalogosServices.js";
-import { useNavigate } from "react-router-dom";
 import { crearPartidoApi } from "../services/partidosServices.js";
+import { agregarPartidoSlice } from "../redux/features/partidosSlice.js";
 
 const esquemaPartido = Yup.object({
   localTeam: Yup.string().required("Seleccioná el equipo local"),
@@ -36,6 +38,7 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
   const [error, setError] = useState("");
   const [errorGuardar, setErrorGuardar] = useState("");
 
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,6 +46,13 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
       try {
         const respuestaEquipos = await obtenerEquiposApi();
         const respuestaCategorias = await obtenerCategoriasApi();
+
+        if (
+          !Array.isArray(respuestaEquipos?.equipos) ||
+          !Array.isArray(respuestaCategorias?.categorias)
+        ) {
+          throw new Error("Los catálogos recibidos no son válidos.");
+        }
 
         setEquipos(respuestaEquipos.equipos);
         setCategorias(respuestaCategorias.categorias);
@@ -66,7 +76,7 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
       date: "",
     },
     validationSchema: esquemaPartido,
-    onSubmit: async (valores) => {
+    onSubmit: async (valores, { resetForm }) => {
       setErrorGuardar("");
 
       try {
@@ -76,7 +86,20 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
           visitorScore: Number(valores.visitorScore),
         };
 
-        await crearPartidoApi(datosPartido);
+        const respuesta = await crearPartidoApi(datosPartido);
+        const partidoCreado = respuesta?.partido;
+
+        if (!partidoCreado?.id) {
+          setErrorGuardar(
+            "El servidor no devolvió los datos del partido creado. " +
+              "Actualizá la página antes de intentar nuevamente.",
+          );
+          return;
+        }
+
+        dispatch(agregarPartidoSlice(partidoCreado));
+
+        resetForm();
 
         if (onPartidoCreado) {
           onPartidoCreado();

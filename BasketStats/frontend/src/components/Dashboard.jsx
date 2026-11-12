@@ -5,6 +5,11 @@ import {
   cerrarSesionSlice,
   actualizarUsuarioSlice,
 } from "../redux/features/sesionSlice.js";
+import {
+  cargarPartidosSlice,
+  eliminarPartidoSlice,
+  limpiarPartidosSlice,
+} from "../redux/features/partidosSlice.js";
 import CrearPartido from "./CrearPartido.jsx";
 import EditarPartido from "./EditarPartido.jsx";
 import InformeUso from "./InformeUso.jsx";
@@ -21,14 +26,16 @@ import {
 
 function Dashboard() {
   const usuario = useSelector((state) => state.sesion.usuario);
+  const partidos = useSelector((state) => state.partidos.lista);
+  const totalPartidos = useSelector((state) => state.partidos.total);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [partidos, setPartidos] = useState(null);
   const [equipos, setEquipos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [datosCargados, setDatosCargados] = useState(false);
   const [error, setError] = useState("");
   const [eliminando, setEliminando] = useState(false);
 
@@ -37,53 +44,94 @@ function Dashboard() {
   const [filtroCategoria, setFiltroCategoria] = useState("");
 
   useEffect(() => {
-    const cargarPartidos = async () => {
+    let activo = true;
+
+    const cargarDatos = async () => {
       try {
         const respuestaPartidos = await obtenerPartidosApi();
         const respuestaEquipos = await obtenerEquiposApi();
         const respuestaCategorias = await obtenerCategoriasApi();
 
-        setPartidos(respuestaPartidos);
+        if (
+          !Array.isArray(respuestaPartidos?.partidos) ||
+          typeof respuestaPartidos.total !== "number" ||
+          !Array.isArray(respuestaEquipos?.equipos) ||
+          !Array.isArray(respuestaCategorias?.categorias)
+        ) {
+          throw new Error("La API devolvió datos inválidos.");
+        }
+
+        if (!activo) {
+          return;
+        }
+
+        dispatch(
+          cargarPartidosSlice({
+            partidos: respuestaPartidos.partidos,
+            total: respuestaPartidos.total,
+            pagina: respuestaPartidos.pagina ?? 1,
+            limite: respuestaPartidos.limite ?? 20,
+          }),
+        );
+
         setEquipos(respuestaEquipos.equipos);
         setCategorias(respuestaCategorias.categorias);
+        setDatosCargados(true);
       } catch (error) {
+        if (!activo) {
+          return;
+        }
+
         if (error.response?.status === 401) {
           setError("La sesión fue rechazada. Volvé a iniciar sesión.");
         } else {
-          setError("No se pudieron cargar los partidos.");
+          setError(
+            error.response?.data?.message ||
+              "No se pudieron cargar los partidos.",
+          );
         }
       } finally {
-        setCargando(false);
+        if (activo) {
+          setCargando(false);
+        }
       }
     };
 
-    cargarPartidos();
-  }, []);
+    cargarDatos();
 
-  const partidoCreado = async () => {
-    setMostrarCrearPartido(false);
-    setError("");
+    return () => {
+      activo = false;
+    };
+  }, [dispatch]);
 
-    try {
-      const respuestaPartidos = await obtenerPartidosApi();
-      setPartidos(respuestaPartidos);
-    } catch (error) {
-      setError("El partido se creó, pero no se pudo actualizar el listado.");
+  const recargarPartidos = async () => {
+    const respuesta = await obtenerPartidosApi();
+
+    if (
+      !Array.isArray(respuesta?.partidos) ||
+      typeof respuesta.total !== "number"
+    ) {
+      throw new Error("La API devolvió datos inválidos.");
     }
+
+    dispatch(
+      cargarPartidosSlice({
+        partidos: respuesta.partidos,
+        total: respuesta.total,
+        pagina: respuesta.pagina ?? 1,
+        limite: respuesta.limite ?? 20,
+      }),
+    );
   };
 
-  const partidoActualizado = async () => {
+  const partidoCreado = () => {
+    setMostrarCrearPartido(false);
+    setError("");
+  };
+
+  const partidoActualizado = () => {
     setIdPartidoEditando(null);
     setError("");
-
-    try {
-      const respuestaPartidos = await obtenerPartidosApi();
-      setPartidos(respuestaPartidos);
-    } catch (error) {
-      setError(
-        "El partido se actualizó, pero no se pudo actualizar el listado.",
-      );
-    }
   };
 
   const seleccionarPartidoEditar = (idPartido) => {
@@ -111,12 +159,11 @@ function Dashboard() {
     try {
       await eliminarPartidoApi(idPartido);
 
+      dispatch(eliminarPartidoSlice(idPartido));
+
       if (idPartidoEditando === idPartido) {
         setIdPartidoEditando(null);
       }
-
-      const respuestaPartidos = await obtenerPartidosApi();
-      setPartidos(respuestaPartidos);
     } catch (error) {
       setError(
         error.response?.data?.message || "No se pudo eliminar el partido.",
@@ -145,20 +192,18 @@ function Dashboard() {
 
   const limiteAlcanzado =
     usuario?.plan?.toLowerCase() === "plus" &&
-    partidos !== null &&
-    partidos.total >= 4;
+    datosCargados &&
+    totalPartidos >= 4;
 
-  const partidosFiltrados = partidos
-    ? partidos.partidos.filter(
-        (partido) =>
-          filtroCategoria === "" || partido.category === filtroCategoria,
-      )
-    : [];
+  const partidosFiltrados = partidos.filter(
+    (partido) => filtroCategoria === "" || partido.category === filtroCategoria,
+  );
 
   const cerrarSesion = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
 
+    dispatch(limpiarPartidosSlice());
     dispatch(cerrarSesionSlice());
 
     navigate("/login");
@@ -197,8 +242,8 @@ function Dashboard() {
         </button>
       )}
 
-      {!cargando && partidos && (
-        <InformeUso plan={usuario.plan} cantidadPartidos={partidos.total} />
+      {!cargando && datosCargados && (
+        <InformeUso plan={usuario.plan} cantidadPartidos={totalPartidos} />
       )}
 
       {usuario.role !== "admin" && (
@@ -227,7 +272,11 @@ function Dashboard() {
 
       <button
         type="button"
-        disabled={cargando || (limiteAlcanzado && !mostrarCrearPartido)}
+        disabled={
+          cargando ||
+          !datosCargados ||
+          (limiteAlcanzado && !mostrarCrearPartido)
+        }
         onClick={() => {
           setIdPartidoEditando(null);
           setMostrarCrearPartido(!mostrarCrearPartido);
@@ -254,10 +303,10 @@ function Dashboard() {
 
       {error && <p className="error">{error}</p>}
 
-      {!cargando && partidos && (
+      {!cargando && datosCargados && (
         <>
           <p>
-            <strong>Total de partidos:</strong> {partidos.total}
+            <strong>Total de partidos:</strong> {totalPartidos}
           </p>
 
           {partidosFiltrados.length === 0 ? (
@@ -342,8 +391,8 @@ function Dashboard() {
         </>
       )}
 
-      {!cargando && partidos && (
-        <GraficoPartidos partidos={partidos.partidos} equipos={equipos} />
+      {!cargando && datosCargados && (
+        <GraficoPartidos partidos={partidos} equipos={equipos} />
       )}
 
       <button type="button" onClick={cerrarSesion}>

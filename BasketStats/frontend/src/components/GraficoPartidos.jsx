@@ -1,4 +1,9 @@
-function GraficoPartidos({ partidos, equipos }) {
+import { useSelector } from "react-redux";
+
+function GraficoPartidos() {
+  const partidos = useSelector((state) => state.partidos.lista);
+  const equipos = useSelector((state) => state.catalogos.equipos);
+
   const partidosGrafico = partidos.slice(0, 5);
 
   if (partidosGrafico.length === 0) {

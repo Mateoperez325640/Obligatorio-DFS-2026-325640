@@ -10,6 +10,10 @@ import {
   eliminarPartidoSlice,
   limpiarPartidosSlice,
 } from "../redux/features/partidosSlice.js";
+import {
+  cargarCatalogosSlice,
+  limpiarCatalogosSlice,
+} from "../redux/features/catalogosSlice.js";
 import CrearPartido from "./CrearPartido.jsx";
 import EditarPartido from "./EditarPartido.jsx";
 import InformeUso from "./InformeUso.jsx";
@@ -29,11 +33,12 @@ function Dashboard() {
   const partidos = useSelector((state) => state.partidos.lista);
   const totalPartidos = useSelector((state) => state.partidos.total);
 
+  const equipos = useSelector((state) => state.catalogos.equipos);
+  const categorias = useSelector((state) => state.catalogos.categorias);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [equipos, setEquipos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [datosCargados, setDatosCargados] = useState(false);
   const [error, setError] = useState("");
@@ -74,8 +79,13 @@ function Dashboard() {
           }),
         );
 
-        setEquipos(respuestaEquipos.equipos);
-        setCategorias(respuestaCategorias.categorias);
+        dispatch(
+          cargarCatalogosSlice({
+            equipos: respuestaEquipos.equipos,
+            categorias: respuestaCategorias.categorias,
+          }),
+        );
+
         setDatosCargados(true);
       } catch (error) {
         if (!activo) {
@@ -204,6 +214,7 @@ function Dashboard() {
     localStorage.removeItem("usuario");
 
     dispatch(limpiarPartidosSlice());
+    dispatch(limpiarCatalogosSlice());
     dispatch(cerrarSesionSlice());
 
     navigate("/login");
@@ -391,9 +402,7 @@ function Dashboard() {
         </>
       )}
 
-      {!cargando && datosCargados && (
-        <GraficoPartidos partidos={partidos} equipos={equipos} />
-      )}
+      {!cargando && datosCargados && <GraficoPartidos />}
 
       <button type="button" onClick={cerrarSesion}>
         Cerrar sesión

@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import {
-  obtenerEquiposApi,
-  obtenerCategoriasApi,
-} from "../services/catalogosServices.js";
 import { crearPartidoApi } from "../services/partidosServices.js";
 import { agregarPartidoSlice } from "../redux/features/partidosSlice.js";
 
@@ -32,39 +28,13 @@ const esquemaPartido = Yup.object({
 });
 
 function CrearPartido({ onPartidoCreado, onVolver }) {
-  const [equipos, setEquipos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState("");
+  const equipos = useSelector((state) => state.catalogos.equipos);
+  const categorias = useSelector((state) => state.catalogos.categorias);
+
   const [errorGuardar, setErrorGuardar] = useState("");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const cargarCatalogos = async () => {
-      try {
-        const respuestaEquipos = await obtenerEquiposApi();
-        const respuestaCategorias = await obtenerCategoriasApi();
-
-        if (
-          !Array.isArray(respuestaEquipos?.equipos) ||
-          !Array.isArray(respuestaCategorias?.categorias)
-        ) {
-          throw new Error("Los catálogos recibidos no son válidos.");
-        }
-
-        setEquipos(respuestaEquipos.equipos);
-        setCategorias(respuestaCategorias.categorias);
-      } catch (error) {
-        setError("No se pudieron cargar los equipos y categorías.");
-      } finally {
-        setCargando(false);
-      }
-    };
-
-    cargarCatalogos();
-  }, []);
 
   const formik = useFormik({
     initialValues: {
@@ -116,14 +86,6 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
     },
   });
 
-  if (cargando) {
-    return <p>Cargando equipos y categorías...</p>;
-  }
-
-  if (error) {
-    return <p className="error">{error}</p>;
-  }
-
   return (
     <div className="login">
       <h2>Crear partido</h2>
@@ -140,6 +102,16 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
       >
         Volver al Dashboard
       </button>
+
+      {equipos.length === 0 && (
+        <p className="error">No hay equipos disponibles para crear partidos.</p>
+      )}
+
+      {categorias.length === 0 && (
+        <p className="error">
+          No hay categorías disponibles para crear partidos.
+        </p>
+      )}
 
       <form onSubmit={formik.handleSubmit} noValidate>
         <div className="campo">
@@ -256,7 +228,13 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
 
         <button
           type="submit"
-          disabled={!formik.dirty || !formik.isValid || formik.isSubmitting}
+          disabled={
+            !formik.dirty ||
+            !formik.isValid ||
+            formik.isSubmitting ||
+            equipos.length === 0 ||
+            categorias.length === 0
+          }
         >
           {formik.isSubmitting ? "Guardando..." : "Crear partido"}
         </button>

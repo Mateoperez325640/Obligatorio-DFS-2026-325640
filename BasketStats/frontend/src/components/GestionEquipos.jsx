@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   obtenerEquiposApi,
   crearEquipoApi,
   editarEquipoApi,
   eliminarEquipoApi,
 } from "../services/catalogosServices.js";
+import {
+  cargarEquiposSlice,
+  agregarEquipoSlice,
+  actualizarEquipoSlice,
+  eliminarEquipoSlice,
+} from "../redux/features/catalogosSlice.js";
 
 const esquemaEquipo = Yup.object({
   name: Yup.string()
@@ -16,29 +22,55 @@ const esquemaEquipo = Yup.object({
 });
 
 function GestionEquipos() {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [equipos, setEquipos] = useState([]);
+  const equipos = useSelector((state) => state.catalogos.equipos);
+  const equiposCargados = useSelector(
+    (state) => state.catalogos.equiposCargados,
+  );
+
   const [equipoEditando, setEquipoEditando] = useState(null);
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando] = useState(!equiposCargados);
   const [eliminando, setEliminando] = useState(false);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
-  const cargarEquipos = async () => {
-    try {
-      const respuesta = await obtenerEquiposApi();
-      setEquipos(respuesta.equipos);
-    } catch (error) {
-      setError("No se pudieron cargar los equipos.");
-    } finally {
-      setCargando(false);
-    }
-  };
-
   useEffect(() => {
+    if (equiposCargados) {
+      setCargando(false);
+      return;
+    }
+
+    let activo = true;
+
+    const cargarEquipos = async () => {
+      try {
+        const respuesta = await obtenerEquiposApi();
+
+        if (!Array.isArray(respuesta?.equipos)) {
+          throw new Error("La API devolvió equipos inválidos.");
+        }
+
+        if (activo) {
+          dispatch(cargarEquiposSlice(respuesta.equipos));
+        }
+      } catch (error) {
+        if (activo) {
+          setError("No se pudieron cargar los equipos.");
+        }
+      } finally {
+        if (activo) {
+          setCargando(false);
+        }
+      }
+    };
+
     cargarEquipos();
-  }, []);
+
+    return () => {
+      activo = false;
+    };
+  }, [dispatch, equiposCargados]);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -49,23 +81,47 @@ function GestionEquipos() {
 
     validationSchema: esquemaEquipo,
 
-    onSubmit: async (valores) => {
+    onSubmit: async (valores, { resetForm }) => {
       setError("");
       setMensaje("");
 
       try {
         if (equipoEditando) {
-          await editarEquipoApi(equipoEditando.id, valores);
+          const respuesta = await editarEquipoApi(equipoEditando.id, valores);
+
+          const equipoActualizado = respuesta?.equipo;
+
+          if (
+            !equipoActualizado?.id ||
+            equipoActualizado.id !== equipoEditando.id
+          ) {
+            setError(
+              "El servidor no devolvió el equipo actualizado. " +
+                "Actualizá la página para verificar los cambios.",
+            );
+            return;
+          }
+
+          dispatch(actualizarEquipoSlice(equipoActualizado));
           setMensaje("Equipo actualizado correctamente.");
         } else {
-          await crearEquipoApi(valores);
+          const respuesta = await crearEquipoApi(valores);
+          const equipoCreado = respuesta?.equipo;
+
+          if (!equipoCreado?.id) {
+            setError(
+              "El servidor no devolvió el equipo creado. " +
+                "Actualizá la página antes de intentar nuevamente.",
+            );
+            return;
+          }
+
+          dispatch(agregarEquipoSlice(equipoCreado));
           setMensaje("Equipo creado correctamente.");
         }
 
         setEquipoEditando(null);
-        formik.resetForm();
-
-        await cargarEquipos();
+        resetForm({ values: { name: "" } });
       } catch (error) {
         setError(
           error.response?.data?.errors?.[0] ||
@@ -86,7 +142,7 @@ function GestionEquipos() {
     setEquipoEditando(null);
     setError("");
     setMensaje("");
-    formik.resetForm();
+    formik.resetForm({ values: { name: "" } });
   };
 
   const eliminarEquipo = async (idEquipo) => {
@@ -105,14 +161,14 @@ function GestionEquipos() {
     try {
       await eliminarEquipoApi(idEquipo);
 
+      dispatch(eliminarEquipoSlice(idEquipo));
+
       if (equipoEditando?.id === idEquipo) {
         setEquipoEditando(null);
-        formik.resetForm();
+        formik.resetForm({ values: { name: "" } });
       }
 
       setMensaje("Equipo eliminado correctamente.");
-
-      await cargarEquipos();
     } catch (error) {
       setError(
         error.response?.data?.message || "No se pudo eliminar el equipo.",
@@ -205,10 +261,6 @@ function GestionEquipos() {
           ))}
         </div>
       )}
-
-      <button type="button" onClick={() => navigate("/admin")}>
-        Volver al panel de administración
-      </button>
     </div>
   );
 }

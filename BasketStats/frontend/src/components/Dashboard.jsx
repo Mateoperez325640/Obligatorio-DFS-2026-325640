@@ -14,6 +14,7 @@ import {
   cargarCatalogosSlice,
   limpiarCatalogosSlice,
 } from "../redux/features/catalogosSlice.js";
+import { limpiarJugadoresSlice } from "../redux/features/jugadoresSlice.js";
 import CrearPartido from "./CrearPartido.jsx";
 import EditarPartido from "./EditarPartido.jsx";
 import InformeUso from "./InformeUso.jsx";
@@ -215,6 +216,7 @@ function Dashboard() {
 
     dispatch(limpiarPartidosSlice());
     dispatch(limpiarCatalogosSlice());
+    dispatch(limpiarJugadoresSlice());
     dispatch(cerrarSesionSlice());
 
     navigate("/login");

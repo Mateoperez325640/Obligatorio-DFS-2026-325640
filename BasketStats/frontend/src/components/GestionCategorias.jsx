@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   obtenerCategoriasApi,
   crearCategoriaApi,
   editarCategoriaApi,
   eliminarCategoriaApi,
 } from "../services/catalogosServices.js";
+import {
+  cargarCategoriasSlice,
+  agregarCategoriaSlice,
+  actualizarCategoriaSlice,
+  eliminarCategoriaSlice,
+} from "../redux/features/catalogosSlice.js";
 
 const esquemaCategoria = Yup.object({
   name: Yup.string()
@@ -16,29 +22,56 @@ const esquemaCategoria = Yup.object({
 });
 
 function GestionCategorias() {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [categorias, setCategorias] = useState([]);
+  const categorias = useSelector((state) => state.catalogos.categorias);
+
+  const categoriasCargadas = useSelector(
+    (state) => state.catalogos.categoriasCargadas,
+  );
+
   const [categoriaEditando, setCategoriaEditando] = useState(null);
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando] = useState(!categoriasCargadas);
   const [eliminando, setEliminando] = useState(false);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
-  const cargarCategorias = async () => {
-    try {
-      const respuesta = await obtenerCategoriasApi();
-      setCategorias(respuesta.categorias);
-    } catch (error) {
-      setError("No se pudieron cargar las categorías.");
-    } finally {
-      setCargando(false);
-    }
-  };
-
   useEffect(() => {
+    if (categoriasCargadas) {
+      setCargando(false);
+      return;
+    }
+
+    let activo = true;
+
+    const cargarCategorias = async () => {
+      try {
+        const respuesta = await obtenerCategoriasApi();
+
+        if (!Array.isArray(respuesta?.categorias)) {
+          throw new Error("La API devolvió categorías inválidas.");
+        }
+
+        if (activo) {
+          dispatch(cargarCategoriasSlice(respuesta.categorias));
+        }
+      } catch (error) {
+        if (activo) {
+          setError("No se pudieron cargar las categorías.");
+        }
+      } finally {
+        if (activo) {
+          setCargando(false);
+        }
+      }
+    };
+
     cargarCategorias();
-  }, []);
+
+    return () => {
+      activo = false;
+    };
+  }, [dispatch, categoriasCargadas]);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -49,23 +82,52 @@ function GestionCategorias() {
 
     validationSchema: esquemaCategoria,
 
-    onSubmit: async (valores) => {
+    onSubmit: async (valores, { resetForm }) => {
       setError("");
       setMensaje("");
 
       try {
         if (categoriaEditando) {
-          await editarCategoriaApi(categoriaEditando.id, valores);
+          const respuesta = await editarCategoriaApi(
+            categoriaEditando.id,
+            valores,
+          );
+
+          const categoriaActualizada = respuesta?.categoria;
+
+          if (
+            !categoriaActualizada?.id ||
+            categoriaActualizada.id !== categoriaEditando.id
+          ) {
+            setError(
+              "El servidor no devolvió la categoría actualizada. " +
+                "Actualizá la página para verificar los cambios.",
+            );
+            return;
+          }
+
+          dispatch(actualizarCategoriaSlice(categoriaActualizada));
+
           setMensaje("Categoría actualizada correctamente.");
         } else {
-          await crearCategoriaApi(valores);
+          const respuesta = await crearCategoriaApi(valores);
+          const categoriaCreada = respuesta?.categoria;
+
+          if (!categoriaCreada?.id) {
+            setError(
+              "El servidor no devolvió la categoría creada. " +
+                "Actualizá la página antes de intentar nuevamente.",
+            );
+            return;
+          }
+
+          dispatch(agregarCategoriaSlice(categoriaCreada));
+
           setMensaje("Categoría creada correctamente.");
         }
 
         setCategoriaEditando(null);
-        formik.resetForm();
-
-        await cargarCategorias();
+        resetForm({ values: { name: "" } });
       } catch (error) {
         setError(
           error.response?.data?.errors?.[0] ||
@@ -86,7 +148,7 @@ function GestionCategorias() {
     setCategoriaEditando(null);
     setError("");
     setMensaje("");
-    formik.resetForm();
+    formik.resetForm({ values: { name: "" } });
   };
 
   const eliminarCategoria = async (idCategoria) => {
@@ -105,14 +167,14 @@ function GestionCategorias() {
     try {
       await eliminarCategoriaApi(idCategoria);
 
+      dispatch(eliminarCategoriaSlice(idCategoria));
+
       if (categoriaEditando?.id === idCategoria) {
         setCategoriaEditando(null);
-        formik.resetForm();
+        formik.resetForm({ values: { name: "" } });
       }
 
       setMensaje("Categoría eliminada correctamente.");
-
-      await cargarCategorias();
     } catch (error) {
       setError(
         error.response?.data?.message || "No se pudo eliminar la categoría.",
@@ -130,11 +192,11 @@ function GestionCategorias() {
 
       <form onSubmit={formik.handleSubmit} noValidate>
         <div className="campo">
-          <label htmlFor="name">Nombre de la categoría</label>
+          <label htmlFor="nombreCategoria">Nombre de la categoría</label>
 
           <input
             type="text"
-            id="name"
+            id="nombreCategoria"
             name="name"
             value={formik.values.name}
             onChange={formik.handleChange}
@@ -208,10 +270,6 @@ function GestionCategorias() {
           ))}
         </div>
       )}
-
-      <button type="button" onClick={() => navigate("/admin")}>
-        Volver al panel de administración
-      </button>
     </div>
   );
 }

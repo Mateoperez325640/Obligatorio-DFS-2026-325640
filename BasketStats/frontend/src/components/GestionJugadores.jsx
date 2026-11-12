@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { obtenerEquiposApi } from "../services/catalogosServices.js";
 import { subirImagenApi } from "../services/imagenesServices.js";
 import {
@@ -10,6 +10,13 @@ import {
   editarJugadorApi,
   eliminarJugadorApi,
 } from "../services/jugadoresServices.js";
+import { cargarEquiposSlice } from "../redux/features/catalogosSlice.js";
+import {
+  cargarJugadoresSlice,
+  agregarJugadorSlice,
+  actualizarJugadorSlice,
+  eliminarJugadorSlice,
+} from "../redux/features/jugadoresSlice.js";
 
 const esquemaJugador = Yup.object({
   name: Yup.string()
@@ -21,12 +28,18 @@ const esquemaJugador = Yup.object({
 });
 
 function GestionJugadores() {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [jugadores, setJugadores] = useState([]);
-  const [equipos, setEquipos] = useState([]);
+  const jugadores = useSelector((state) => state.jugadores.lista);
+  const jugadoresCargados = useSelector((state) => state.jugadores.cargados);
+
+  const equipos = useSelector((state) => state.catalogos.equipos);
+  const equiposCargados = useSelector(
+    (state) => state.catalogos.equiposCargados,
+  );
+
   const [jugadorEditando, setJugadorEditando] = useState(null);
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando] = useState(!jugadoresCargados);
   const [eliminando, setEliminando] = useState(false);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -36,23 +49,74 @@ function GestionJugadores() {
   const [leyendoImagen, setLeyendoImagen] = useState(false);
   const [claveImagen, setClaveImagen] = useState(0);
 
-  const cargarDatos = async () => {
-    try {
-      const respuestaJugadores = await obtenerJugadoresApi();
-      const respuestaEquipos = await obtenerEquiposApi();
-
-      setJugadores(respuestaJugadores.jugadores);
-      setEquipos(respuestaEquipos.equipos);
-    } catch (error) {
-      setError("No se pudieron cargar los jugadores y equipos.");
-    } finally {
+  useEffect(() => {
+    if (jugadoresCargados) {
       setCargando(false);
+      return;
     }
-  };
+
+    let activo = true;
+
+    const cargarJugadores = async () => {
+      try {
+        const respuesta = await obtenerJugadoresApi();
+
+        if (!Array.isArray(respuesta?.jugadores)) {
+          throw new Error("La API devolvió jugadores inválidos.");
+        }
+
+        if (activo) {
+          dispatch(cargarJugadoresSlice(respuesta.jugadores));
+        }
+      } catch (error) {
+        if (activo) {
+          setError("No se pudieron cargar los jugadores.");
+        }
+      } finally {
+        if (activo) {
+          setCargando(false);
+        }
+      }
+    };
+
+    cargarJugadores();
+
+    return () => {
+      activo = false;
+    };
+  }, [dispatch, jugadoresCargados]);
 
   useEffect(() => {
-    cargarDatos();
-  }, []);
+    if (equiposCargados) {
+      return;
+    }
+
+    let activo = true;
+
+    const cargarEquipos = async () => {
+      try {
+        const respuesta = await obtenerEquiposApi();
+
+        if (!Array.isArray(respuesta?.equipos)) {
+          throw new Error("La API devolvió equipos inválidos.");
+        }
+
+        if (activo) {
+          dispatch(cargarEquiposSlice(respuesta.equipos));
+        }
+      } catch (error) {
+        if (activo) {
+          setError("No se pudieron cargar los equipos.");
+        }
+      }
+    };
+
+    cargarEquipos();
+
+    return () => {
+      activo = false;
+    };
+  }, [dispatch, equiposCargados]);
 
   const limpiarImagen = (imagenAnterior = "") => {
     setImagenBase64("");
@@ -119,7 +183,7 @@ function GestionJugadores() {
 
     validationSchema: esquemaJugador,
 
-    onSubmit: async (valores) => {
+    onSubmit: async (valores, { resetForm }) => {
       setError("");
       setMensaje("");
 
@@ -130,22 +194,62 @@ function GestionJugadores() {
 
         if (imagenBase64) {
           const respuestaImagen = await subirImagenApi(imagenBase64);
+
+          if (!respuestaImagen?.image) {
+            setError("La imagen no se pudo guardar. Intentá nuevamente.");
+            return;
+          }
+
           datosJugador.image = respuestaImagen.image;
         }
 
         if (jugadorEditando) {
-          await editarJugadorApi(jugadorEditando.id, datosJugador);
+          const respuesta = await editarJugadorApi(
+            jugadorEditando.id,
+            datosJugador,
+          );
+
+          const jugadorActualizado = respuesta?.jugador;
+
+          if (
+            !jugadorActualizado?.id ||
+            jugadorActualizado.id !== jugadorEditando.id
+          ) {
+            setError(
+              "El servidor no devolvió el jugador actualizado. " +
+                "Actualizá la página para verificar los cambios.",
+            );
+            return;
+          }
+
+          dispatch(actualizarJugadorSlice(jugadorActualizado));
+
           setMensaje("Jugador actualizado correctamente.");
         } else {
-          await crearJugadorApi(datosJugador);
+          const respuesta = await crearJugadorApi(datosJugador);
+          const jugadorCreado = respuesta?.jugador;
+
+          if (!jugadorCreado?.id) {
+            setError(
+              "El servidor no devolvió el jugador creado. " +
+                "Actualizá la página antes de intentar nuevamente.",
+            );
+            return;
+          }
+
+          dispatch(agregarJugadorSlice(jugadorCreado));
+
           setMensaje("Jugador creado correctamente.");
         }
 
         setJugadorEditando(null);
-        formik.resetForm();
+        resetForm({
+          values: {
+            name: "",
+            team: "",
+          },
+        });
         limpiarImagen();
-
-        await cargarDatos();
       } catch (error) {
         setError(
           error.response?.data?.errors?.[0] ||
@@ -167,7 +271,12 @@ function GestionJugadores() {
     setJugadorEditando(null);
     setError("");
     setMensaje("");
-    formik.resetForm();
+    formik.resetForm({
+      values: {
+        name: "",
+        team: "",
+      },
+    });
     limpiarImagen();
   };
 
@@ -187,15 +296,20 @@ function GestionJugadores() {
     try {
       await eliminarJugadorApi(idJugador);
 
+      dispatch(eliminarJugadorSlice(idJugador));
+
       if (jugadorEditando?.id === idJugador) {
         setJugadorEditando(null);
-        formik.resetForm();
+        formik.resetForm({
+          values: {
+            name: "",
+            team: "",
+          },
+        });
         limpiarImagen();
       }
 
       setMensaje("Jugador eliminado correctamente.");
-
-      await cargarDatos();
     } catch (error) {
       setError(
         error.response?.data?.message || "No se pudo eliminar el jugador.",
@@ -213,24 +327,25 @@ function GestionJugadores() {
 
       <form onSubmit={formik.handleSubmit} noValidate>
         <div className="campo">
-          <label htmlFor="name">Nombre del jugador</label>
+          <label htmlFor="nombreJugador">Nombre del jugador</label>
           <input
             type="text"
-            id="name"
+            id="nombreJugador"
             name="name"
             value={formik.values.name}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
           />
+
           {formik.touched.name && formik.errors.name && (
             <small className="error">{formik.errors.name}</small>
           )}
         </div>
 
         <div className="campo">
-          <label htmlFor="team">Equipo</label>
+          <label htmlFor="equipoJugador">Equipo</label>
           <select
-            id="team"
+            id="equipoJugador"
             name="team"
             value={formik.values.team}
             onChange={formik.handleChange}
@@ -243,6 +358,7 @@ function GestionJugadores() {
               </option>
             ))}
           </select>
+
           {formik.touched.team && formik.errors.team && (
             <small className="error">{formik.errors.team}</small>
           )}
@@ -299,7 +415,8 @@ function GestionJugadores() {
             (!formik.dirty && !imagenBase64) ||
             !formik.isValid ||
             formik.isSubmitting ||
-            leyendoImagen
+            leyendoImagen ||
+            equipos.length === 0
           }
         >
           {formik.isSubmitting
@@ -377,10 +494,6 @@ function GestionJugadores() {
           })}
         </div>
       )}
-
-      <button type="button" onClick={() => navigate("/admin")}>
-        Volver al panel de administración
-      </button>
     </div>
   );
 }

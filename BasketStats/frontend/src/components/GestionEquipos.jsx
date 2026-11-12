@@ -74,13 +74,10 @@ function GestionEquipos() {
 
   const formik = useFormik({
     enableReinitialize: true,
-
     initialValues: {
       name: equipoEditando?.name || "",
     },
-
     validationSchema: esquemaEquipo,
-
     onSubmit: async (valores, { resetForm }) => {
       setError("");
       setMensaje("");
@@ -88,7 +85,6 @@ function GestionEquipos() {
       try {
         if (equipoEditando) {
           const respuesta = await editarEquipoApi(equipoEditando.id, valores);
-
           const equipoActualizado = respuesta?.equipo;
 
           if (
@@ -160,7 +156,6 @@ function GestionEquipos() {
 
     try {
       await eliminarEquipoApi(idEquipo);
-
       dispatch(eliminarEquipoSlice(idEquipo));
 
       if (equipoEditando?.id === idEquipo) {
@@ -179,85 +174,109 @@ function GestionEquipos() {
   };
 
   return (
-    <div className="login">
-      <h2>Gestión de equipos</h2>
+    <div className="admin-modulo">
+      <div className="admin-modulo-cabecera">
+        <div>
+          <span className="admin-sobretitulo admin-sobretitulo-oscuro">
+            CATÁLOGO
+          </span>
+          <h2>Equipos</h2>
+          <p>Gestioná los clubes disponibles en BasketStats.</p>
+        </div>
+        <span className="admin-contador">{equipos.length} registros</span>
+      </div>
 
-      <h3>{equipoEditando ? "Editar equipo" : "Crear equipo"}</h3>
-
-      <form onSubmit={formik.handleSubmit} noValidate>
+      <form
+        className="admin-formulario"
+        onSubmit={formik.handleSubmit}
+        noValidate
+      >
+        <h3>{equipoEditando ? "Editar equipo" : "Crear equipo"}</h3>
         <div className="campo">
           <label htmlFor="name">Nombre del equipo</label>
-
           <input
             type="text"
             id="name"
             name="name"
+            placeholder="Ej.: Club Atlético Peñarol"
             value={formik.values.name}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
           />
-
           {formik.touched.name && formik.errors.name && (
             <small className="error">{formik.errors.name}</small>
           )}
         </div>
 
-        {mensaje && <p className="mensaje-exito">{mensaje}</p>}
-
-        {error && <p className="error">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={!formik.dirty || !formik.isValid || formik.isSubmitting}
-        >
-          {formik.isSubmitting
-            ? "Guardando..."
-            : equipoEditando
-              ? "Guardar cambios"
-              : "Crear equipo"}
-        </button>
-
-        {equipoEditando && (
-          <button type="button" onClick={cancelarEdicion}>
-            Cancelar edición
-          </button>
+        {mensaje && (
+          <p className="mensaje-exito" role="status">
+            {mensaje}
+          </p>
         )}
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div className="admin-formulario-acciones">
+          <button
+            type="submit"
+            disabled={!formik.dirty || !formik.isValid || formik.isSubmitting}
+          >
+            {formik.isSubmitting
+              ? "Guardando..."
+              : equipoEditando
+                ? "Guardar cambios"
+                : "Crear equipo"}
+          </button>
+          {equipoEditando && (
+            <button
+              type="button"
+              className="admin-boton-secundario"
+              onClick={cancelarEdicion}
+            >
+              Cancelar edición
+            </button>
+          )}
+        </div>
       </form>
 
-      <h3>Equipos registrados</h3>
+      <div className="admin-listado-cabecera">
+        <h3>Equipos registrados</h3>
+        <span>{equipos.length} en total</span>
+      </div>
 
       {cargando ? (
-        <p>Cargando equipos...</p>
+        <p className="admin-estado">Cargando equipos...</p>
       ) : equipos.length === 0 ? (
-        <p>No hay equipos registrados.</p>
+        <p className="admin-estado">No hay equipos registrados.</p>
       ) : (
-        <div>
+        <div className="admin-lista">
           {equipos.map((equipo) => (
-            <div
-              key={equipo.id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                padding: "12px",
-                marginBottom: "12px",
-              }}
-            >
-              <p>
+            <article key={equipo.id} className="admin-registro">
+              <div className="admin-registro-info">
+                <span className="admin-registro-tipo">EQUIPO</span>
                 <strong>{equipo.name}</strong>
-              </p>
-
-              <button type="button" onClick={() => seleccionarEquipo(equipo)}>
-                Editar
-              </button>
-
-              <button
-                type="button"
-                onClick={() => eliminarEquipo(equipo.id)}
-                disabled={eliminando}
-              >
-                {eliminando ? "Procesando..." : "Eliminar"}
-              </button>
-            </div>
+              </div>
+              <div className="admin-registro-acciones">
+                <button
+                  type="button"
+                  className="admin-boton-editar"
+                  onClick={() => seleccionarEquipo(equipo)}
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  className="admin-boton-eliminar"
+                  onClick={() => eliminarEquipo(equipo.id)}
+                  disabled={eliminando}
+                >
+                  {eliminando ? "Procesando..." : "Eliminar"}
+                </button>
+              </div>
+            </article>
           ))}
         </div>
       )}

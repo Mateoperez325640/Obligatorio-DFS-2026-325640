@@ -25,7 +25,6 @@ function GestionCategorias() {
   const dispatch = useDispatch();
 
   const categorias = useSelector((state) => state.catalogos.categorias);
-
   const categoriasCargadas = useSelector(
     (state) => state.catalogos.categoriasCargadas,
   );
@@ -75,13 +74,10 @@ function GestionCategorias() {
 
   const formik = useFormik({
     enableReinitialize: true,
-
     initialValues: {
       name: categoriaEditando?.name || "",
     },
-
     validationSchema: esquemaCategoria,
-
     onSubmit: async (valores, { resetForm }) => {
       setError("");
       setMensaje("");
@@ -92,7 +88,6 @@ function GestionCategorias() {
             categoriaEditando.id,
             valores,
           );
-
           const categoriaActualizada = respuesta?.categoria;
 
           if (
@@ -107,7 +102,6 @@ function GestionCategorias() {
           }
 
           dispatch(actualizarCategoriaSlice(categoriaActualizada));
-
           setMensaje("Categoría actualizada correctamente.");
         } else {
           const respuesta = await crearCategoriaApi(valores);
@@ -122,7 +116,6 @@ function GestionCategorias() {
           }
 
           dispatch(agregarCategoriaSlice(categoriaCreada));
-
           setMensaje("Categoría creada correctamente.");
         }
 
@@ -166,7 +159,6 @@ function GestionCategorias() {
 
     try {
       await eliminarCategoriaApi(idCategoria);
-
       dispatch(eliminarCategoriaSlice(idCategoria));
 
       if (categoriaEditando?.id === idCategoria) {
@@ -185,88 +177,109 @@ function GestionCategorias() {
   };
 
   return (
-    <div className="login">
-      <h2>Gestión de categorías</h2>
+    <div className="admin-modulo">
+      <div className="admin-modulo-cabecera">
+        <div>
+          <span className="admin-sobretitulo admin-sobretitulo-oscuro">
+            CATÁLOGO
+          </span>
+          <h2>Categorías</h2>
+          <p>Organizá las categorías de los partidos.</p>
+        </div>
+        <span className="admin-contador">{categorias.length} registros</span>
+      </div>
 
-      <h3>{categoriaEditando ? "Editar categoría" : "Crear categoría"}</h3>
-
-      <form onSubmit={formik.handleSubmit} noValidate>
+      <form
+        className="admin-formulario"
+        onSubmit={formik.handleSubmit}
+        noValidate
+      >
+        <h3>{categoriaEditando ? "Editar categoría" : "Crear categoría"}</h3>
         <div className="campo">
           <label htmlFor="nombreCategoria">Nombre de la categoría</label>
-
           <input
             type="text"
             id="nombreCategoria"
             name="name"
+            placeholder="Ej.: Semifinal"
             value={formik.values.name}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
           />
-
           {formik.touched.name && formik.errors.name && (
             <small className="error">{formik.errors.name}</small>
           )}
         </div>
 
-        {mensaje && <p className="mensaje-exito">{mensaje}</p>}
-
-        {error && <p className="error">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={!formik.dirty || !formik.isValid || formik.isSubmitting}
-        >
-          {formik.isSubmitting
-            ? "Guardando..."
-            : categoriaEditando
-              ? "Guardar cambios"
-              : "Crear categoría"}
-        </button>
-
-        {categoriaEditando && (
-          <button type="button" onClick={cancelarEdicion}>
-            Cancelar edición
-          </button>
+        {mensaje && (
+          <p className="mensaje-exito" role="status">
+            {mensaje}
+          </p>
         )}
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div className="admin-formulario-acciones">
+          <button
+            type="submit"
+            disabled={!formik.dirty || !formik.isValid || formik.isSubmitting}
+          >
+            {formik.isSubmitting
+              ? "Guardando..."
+              : categoriaEditando
+                ? "Guardar cambios"
+                : "Crear categoría"}
+          </button>
+          {categoriaEditando && (
+            <button
+              type="button"
+              className="admin-boton-secundario"
+              onClick={cancelarEdicion}
+            >
+              Cancelar edición
+            </button>
+          )}
+        </div>
       </form>
 
-      <h3>Categorías registradas</h3>
+      <div className="admin-listado-cabecera">
+        <h3>Categorías registradas</h3>
+        <span>{categorias.length} en total</span>
+      </div>
 
       {cargando ? (
-        <p>Cargando categorías...</p>
+        <p className="admin-estado">Cargando categorías...</p>
       ) : categorias.length === 0 ? (
-        <p>No hay categorías registradas.</p>
+        <p className="admin-estado">No hay categorías registradas.</p>
       ) : (
-        <div>
+        <div className="admin-lista">
           {categorias.map((categoria) => (
-            <div
-              key={categoria.id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                padding: "12px",
-                marginBottom: "12px",
-              }}
-            >
-              <p>
+            <article key={categoria.id} className="admin-registro">
+              <div className="admin-registro-info">
+                <span className="admin-registro-tipo">CATEGORÍA</span>
                 <strong>{categoria.name}</strong>
-              </p>
-
-              <button
-                type="button"
-                onClick={() => seleccionarCategoria(categoria)}
-              >
-                Editar
-              </button>
-
-              <button
-                type="button"
-                onClick={() => eliminarCategoria(categoria.id)}
-                disabled={eliminando}
-              >
-                {eliminando ? "Procesando..." : "Eliminar"}
-              </button>
-            </div>
+              </div>
+              <div className="admin-registro-acciones">
+                <button
+                  type="button"
+                  className="admin-boton-editar"
+                  onClick={() => seleccionarCategoria(categoria)}
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  className="admin-boton-eliminar"
+                  onClick={() => eliminarCategoria(categoria.id)}
+                  disabled={eliminando}
+                >
+                  {eliminando ? "Procesando..." : "Eliminar"}
+                </button>
+              </div>
+            </article>
           ))}
         </div>
       )}

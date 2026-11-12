@@ -302,245 +302,364 @@ function Dashboard() {
   }
 
   return (
-    <div className="login">
-      <h2>Mi panel</h2>
+    <main className="login dashboard">
+      {/* Encabezado con acciones siempre accesibles */}
+      <header className="dashboard-hero">
+        <div className="dashboard-hero-principal">
+          <span className="dashboard-sobretitulo">
+            BASKETSTATS · PANEL PERSONAL
+          </span>
+          <h2>Mi panel</h2>
+          <p>
+            Bienvenido, {usuario.name}. Gestioná tus partidos y estadísticas.
+          </p>
+          <div className="dashboard-usuario-datos">
+            <span>
+              Usuario: <strong>{usuario.username}</strong>
+            </span>
+            <span>
+              Rol: <strong>{usuario.role}</strong>
+            </span>
+          </div>
+        </div>
+        <div className="dashboard-hero-acciones">
+          {usuario.role === "admin" && (
+            <button
+              type="button"
+              className="btn-panel-admin"
+              onClick={() => navigate("/admin")}
+            >
+              Panel de administración
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn-cerrar-sesion"
+            onClick={cerrarSesion}
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </header>
 
-      <p>Bienvenido, {usuario.name}</p>
+      {/* Indicadores rápidos */}
+      <section
+        className="dashboard-indicadores"
+        aria-label="Resumen de la cuenta"
+      >
+        <div className="dashboard-indicador">
+          <span className="indicador-etiqueta">Partidos registrados</span>
+          <strong className="indicador-valor">
+            {datosCargados ? totalPartidos : "—"}
+          </strong>
+          <span className="indicador-detalle">En tu cuenta</span>
+        </div>
+        <div className="dashboard-indicador">
+          <span className="indicador-etiqueta">Plan actual</span>
+          <strong className="indicador-valor indicador-valor-texto">
+            {usuario.plan?.toLowerCase() === "premium"
+              ? "Premium"
+              : usuario.plan || "Sin plan"}
+          </strong>
+          <span className="indicador-detalle">
+            {usuario.plan?.toLowerCase() === "plus"
+              ? "Hasta 4 partidos"
+              : "Gestión de partidos"}
+          </span>
+        </div>
+        <div className="dashboard-indicador">
+          <span className="indicador-etiqueta">Partidos del filtro</span>
+          <strong className="indicador-valor">
+            {datosCargados ? totalFiltrado : "—"}
+          </strong>
+          <span className="indicador-detalle">
+            {filtroCategoria
+              ? "Categoría seleccionada"
+              : "Todas las categorías"}
+          </span>
+        </div>
+      </section>
 
-      <p>
-        <strong>Usuario:</strong> {usuario.username}
-      </p>
-
-      <p>
-        <strong>Rol:</strong> {usuario.role}
-      </p>
-
-      <p>
-        <strong>Plan:</strong> {usuario.plan}
-      </p>
-
-      {usuario.role === "admin" && (
-        <button type="button" onClick={() => navigate("/admin")}>
-          Panel de administración
-        </button>
+      {(errorCatalogos || errorAccion) && (
+        <div className="dashboard-alertas" role="alert">
+          {errorCatalogos && <p className="error">{errorCatalogos}</p>}
+          {errorAccion && <p className="error">{errorAccion}</p>}
+        </div>
       )}
 
-      {datosCargados && <InformeUso />}
-
-      {usuario.role !== "admin" && (
-        <CambioPlan plan={usuario.plan} onPlanCambiado={planCambiado} />
-      )}
-
-      {errorCatalogos && <p className="error">{errorCatalogos}</p>}
-
-      {errorAccion && <p className="error">{errorAccion}</p>}
-
-      <h3>Crear partido</h3>
-
-      {limiteAlcanzado && (
-        <p>
-          Alcanzaste el límite de 4 partidos de tu plan Plus. Para crear más
-          partidos, cambiá a Premium o eliminá alguno de los existentes.
-        </p>
-      )}
-
-      {datosCargados && catalogosCargados && (
-        <fieldset
-          disabled={limiteAlcanzado || cargandoPartidos}
-          style={{
-            border: "none",
-            margin: 0,
-            padding: 0,
-            minWidth: 0,
-          }}
-        >
-          <CrearPartido
-            onPartidoCreado={partidoCreado}
-            onVolver={() =>
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              })
-            }
-          />
-        </fieldset>
-      )}
-
-      <h3>Mis partidos</h3>
-
-      <div className="campo">
-        <label htmlFor="filtroCategoria">Filtrar por categoría</label>
-
-        <select
-          id="filtroCategoria"
-          value={filtroCategoria}
-          onChange={cambiarFiltro}
-          disabled={!catalogosCargados}
-        >
-          <option value="">Todas las categorías</option>
-
-          {categorias.map((categoria) => (
-            <option key={categoria.id} value={categoria.id}>
-              {categoria.name}
-            </option>
-          ))}
-        </select>
+      {/* Uso y plan: dos tarjetas, sin separar las funcionalidades */}
+      <div className="dashboard-paneles-superiores">
+        <section className="dashboard-tarjeta dashboard-tarjeta-uso">
+          <span className="dashboard-sobretitulo dashboard-sobretitulo-claro">
+            TU ACTIVIDAD
+          </span>
+          {datosCargados ? <InformeUso /> : <p>Cargando informe de uso...</p>}
+        </section>
+        <section className="dashboard-tarjeta dashboard-tarjeta-plan">
+          <span className="dashboard-sobretitulo dashboard-sobretitulo-claro">
+            TU SUSCRIPCIÓN
+          </span>
+          {usuario.role !== "admin" ? (
+            <CambioPlan plan={usuario.plan} onPlanCambiado={planCambiado} />
+          ) : (
+            <div className="dashboard-info-admin">
+              <h3>Administración</h3>
+              <p>
+                Gestioná equipos, categorías y jugadores desde el panel de
+                administración.
+              </p>
+              <button type="button" onClick={() => navigate("/admin")}>
+                Ir al panel administrador
+              </button>
+            </div>
+          )}
+        </section>
       </div>
 
-      {datosCargados && (
-        <>
-          <p>
-            <strong>Total de partidos:</strong> {totalPartidos}
-          </p>
+      {/* El formulario permanece visible, como requiere la consigna */}
+      <section
+        className="dashboard-seccion dashboard-seccion-crear"
+        aria-label="Crear partido"
+      >
+        <div className="dashboard-seccion-cabecera">
+          <div>
+            <span className="dashboard-sobretitulo dashboard-sobretitulo-claro">
+              NUEVO ENCUENTRO
+            </span>
+            <h3>Registrar un partido</h3>
+          </div>
+          <p>Completá los datos para agregar un resultado a BasketStats.</p>
+        </div>
 
-          {filtroCategoria && (
-            <p>
-              <strong>Partidos de la categoría seleccionada:</strong>{" "}
-              {totalFiltrado}
+        {limiteAlcanzado && (
+          <p className="dashboard-aviso-limite">
+            Alcanzaste el límite de 4 partidos de tu plan Plus. Para crear más
+            partidos, cambiá a Premium o eliminá alguno de los existentes.
+          </p>
+        )}
+
+        {datosCargados && catalogosCargados ? (
+          <fieldset
+            disabled={limiteAlcanzado || cargandoPartidos}
+            className="dashboard-formulario"
+          >
+            <CrearPartido
+              onPartidoCreado={partidoCreado}
+              onVolver={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            />
+          </fieldset>
+        ) : (
+          <p>Preparando el formulario...</p>
+        )}
+      </section>
+
+      {/* Todos los partidos de la página actual, con edición e IA integradas */}
+      <section
+        className="dashboard-seccion dashboard-seccion-partidos"
+        aria-label="Mis partidos"
+      >
+        <div className="dashboard-seccion-cabecera">
+          <div>
+            <span className="dashboard-sobretitulo dashboard-sobretitulo-claro">
+              HISTORIAL
+            </span>
+            <h3>Mis partidos</h3>
+          </div>
+          <p>
+            {datosCargados
+              ? `${totalPartidos} registrados en total`
+              : "Consultando partidos..."}
+          </p>
+        </div>
+
+        <div className="dashboard-filtros">
+          <div className="campo">
+            <label htmlFor="filtroCategoria">Filtrar por categoría</label>
+            <select
+              id="filtroCategoria"
+              value={filtroCategoria}
+              onChange={cambiarFiltro}
+              disabled={!catalogosCargados}
+            >
+              <option value="">Todas las categorías</option>
+              {categorias.map((categoria) => (
+                <option key={categoria.id} value={categoria.id}>
+                  {categoria.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {datosCargados && (
+            <p className="dashboard-filtros-info">
+              {filtroCategoria
+                ? `${totalFiltrado} partidos en esta categoría`
+                : `${totalPartidos} partidos registrados`}
             </p>
           )}
-        </>
-      )}
+        </div>
 
-      {cargandoPartidos && <p>Cargando partidos...</p>}
-
-      {errorPartidos && <p className="error">{errorPartidos}</p>}
-
-      {!cargandoPartidos && !errorPartidos && datosCargados && (
-        <>
-          {partidos.length === 0 ? (
-            <p>No hay partidos para mostrar con el filtro seleccionado.</p>
-          ) : (
-            <div>
-              {partidos.map((partido) => {
-                const equipoLocal = equipos.find(
-                  (equipo) => equipo.id === partido.localTeam,
-                );
-
-                const equipoVisitante = equipos.find(
-                  (equipo) => equipo.id === partido.visitorTeam,
-                );
-
-                const categoriaPartido = categorias.find(
-                  (categoria) => categoria.id === partido.category,
-                );
-
-                return (
-                  <div
-                    key={partido.id}
-                    style={{
-                      border: "1px solid #ddd",
-                      borderRadius: "8px",
-                      padding: "15px",
-                      marginBottom: "15px",
-                    }}
-                  >
-                    <h4>
-                      {equipoLocal?.name || "Equipo local"}
-                      {" vs "}
-                      {equipoVisitante?.name || "Equipo visitante"}
-                    </h4>
-
-                    <p>
-                      <strong>Categoría:</strong>{" "}
-                      {categoriaPartido?.name || "Sin categoría"}
-                    </p>
-
-                    <p>
-                      <strong>Resultado:</strong> {partido.localScore} -{" "}
-                      {partido.visitorScore}
-                    </p>
-
-                    <p>
-                      <strong>Fecha:</strong>{" "}
-                      {new Date(partido.date).toLocaleDateString("es-UY", {
-                        timeZone: "UTC",
-                      })}
-                    </p>
-
-                    <ResumenPartido idPartido={partido.id} />
-
-                    <button
-                      type="button"
-                      onClick={() => seleccionarPartidoEditar(partido.id)}
-                    >
-                      {idPartidoEditando === partido.id
-                        ? "Ocultar edición"
-                        : "Editar partido"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => eliminarPartido(partido.id)}
-                      disabled={eliminando}
-                    >
-                      {eliminando ? "Procesando..." : "Eliminar partido"}
-                    </button>
-
-                    {idPartidoEditando === partido.id && (
-                      <EditarPartido
-                        idPartido={partido.id}
-                        onPartidoActualizado={partidoActualizado}
-                        onVolver={() => setIdPartidoEditando(null)}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {totalFiltrado > 0 && (
-            <div
-              style={{
-                marginTop: "15px",
-                marginBottom: "20px",
-              }}
-            >
-              <p>
-                Página {paginaActual} de {totalPaginas}
-                {" — "}
-                {partidos.length} partidos mostrados
-              </p>
-
-              {totalPaginas > 1 && (
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => cambiarPagina(paginaActual - 1)}
-                    disabled={paginaActual <= 1 || cargandoPartidos}
-                  >
-                    Anterior
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => cambiarPagina(paginaActual + 1)}
-                    disabled={paginaActual >= totalPaginas || cargandoPartidos}
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      )}
-
-      {datosCargados && !cargandoPartidos && (
-        <>
-          <p>
-            <small>El gráfico muestra los partidos de la página actual.</small>
+        {cargandoPartidos && (
+          <p className="dashboard-mensaje">Cargando partidos...</p>
+        )}
+        {errorPartidos && (
+          <p className="error" role="alert">
+            {errorPartidos}
           </p>
+        )}
 
-          <GraficoPartidos />
-        </>
-      )}
+        {!cargandoPartidos && !errorPartidos && datosCargados && (
+          <>
+            {partidos.length === 0 ? (
+              <p className="dashboard-mensaje">
+                No hay partidos para mostrar con el filtro seleccionado.
+              </p>
+            ) : (
+              <div className="dashboard-partidos-grid">
+                {partidos.map((partido) => {
+                  const equipoLocal = equipos.find(
+                    (equipo) => equipo.id === partido.localTeam,
+                  );
+                  const equipoVisitante = equipos.find(
+                    (equipo) => equipo.id === partido.visitorTeam,
+                  );
+                  const categoriaPartido = categorias.find(
+                    (categoria) => categoria.id === partido.category,
+                  );
+                  const editando = idPartidoEditando === partido.id;
 
-      <button type="button" onClick={cerrarSesion}>
-        Cerrar sesión
-      </button>
-    </div>
+                  return (
+                    <article
+                      key={partido.id}
+                      className={`dashboard-partido-card${editando ? " dashboard-partido-card-editando" : ""}`}
+                    >
+                      <div className="partido-cabecera">
+                        <span className="partido-categoria">
+                          {categoriaPartido?.name || "Sin categoría"}
+                        </span>
+                        <span className="partido-fecha">
+                          {new Date(partido.date).toLocaleDateString("es-UY", {
+                            timeZone: "UTC",
+                          })}
+                        </span>
+                      </div>
+
+                      <div className="partido-marcador">
+                        <div className="partido-equipo">
+                          <span>LOCAL</span>
+                          <strong>{equipoLocal?.name || "Equipo local"}</strong>
+                        </div>
+                        <div className="partido-resultado">
+                          <strong>
+                            {partido.localScore} <span>:</span>{" "}
+                            {partido.visitorScore}
+                          </strong>
+                          <small>Resultado</small>
+                        </div>
+                        <div className="partido-equipo partido-equipo-visitante">
+                          <span>VISITANTE</span>
+                          <strong>
+                            {equipoVisitante?.name || "Equipo visitante"}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <ResumenPartido idPartido={partido.id} />
+
+                      <div className="partido-acciones">
+                        <button
+                          type="button"
+                          className="btn-editar-partido"
+                          onClick={() => seleccionarPartidoEditar(partido.id)}
+                        >
+                          {editando ? "Ocultar edición" : "Editar partido"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-eliminar-partido"
+                          onClick={() => eliminarPartido(partido.id)}
+                          disabled={eliminando}
+                        >
+                          {eliminando ? "Procesando..." : "Eliminar partido"}
+                        </button>
+                      </div>
+
+                      {editando && (
+                        <div className="partido-edicion">
+                          <EditarPartido
+                            idPartido={partido.id}
+                            onPartidoActualizado={partidoActualizado}
+                            onVolver={() => setIdPartidoEditando(null)}
+                          />
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {totalFiltrado > 0 && (
+              <nav
+                className="dashboard-paginacion"
+                aria-label="Paginación de partidos"
+              >
+                <p>
+                  Página <strong>{paginaActual}</strong> de{" "}
+                  <strong>{totalPaginas}</strong>
+                  <span className="dashboard-paginacion-detalle">
+                    {" · "}
+                    {partidos.length} partidos mostrados
+                  </span>
+                </p>
+                {totalPaginas > 1 && (
+                  <div className="dashboard-paginacion-botones">
+                    <button
+                      type="button"
+                      onClick={() => cambiarPagina(paginaActual - 1)}
+                      disabled={paginaActual <= 1 || cargandoPartidos}
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => cambiarPagina(paginaActual + 1)}
+                      disabled={
+                        paginaActual >= totalPaginas || cargandoPartidos
+                      }
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
+              </nav>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Estadísticas integradas: el componente sigue leyendo Redux */}
+      <section
+        className="dashboard-seccion dashboard-seccion-grafico"
+        aria-label="Estadísticas de partidos"
+      >
+        <div className="dashboard-seccion-cabecera">
+          <div>
+            <span className="dashboard-sobretitulo dashboard-sobretitulo-claro">
+              ESTADÍSTICAS
+            </span>
+            <h3>Comparación de resultados</h3>
+          </div>
+          <p>Visualización de los partidos de la página actual.</p>
+        </div>
+        {datosCargados && !cargandoPartidos ? (
+          <div className="dashboard-contenedor-grafico">
+            <GraficoPartidos />
+          </div>
+        ) : (
+          <p className="dashboard-mensaje">Preparando estadísticas...</p>
+        )}
+      </section>
+    </main>
   );
 }
 

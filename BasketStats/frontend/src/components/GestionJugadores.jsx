@@ -320,180 +320,204 @@ function GestionJugadores() {
   };
 
   return (
-    <div className="login">
-      <h2>Gestión de jugadores</h2>
-
-      <h3>{jugadorEditando ? "Editar jugador" : "Crear jugador"}</h3>
-
-      <form onSubmit={formik.handleSubmit} noValidate>
-        <div className="campo">
-          <label htmlFor="nombreJugador">Nombre del jugador</label>
-          <input
-            type="text"
-            id="nombreJugador"
-            name="name"
-            value={formik.values.name}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          />
-
-          {formik.touched.name && formik.errors.name && (
-            <small className="error">{formik.errors.name}</small>
-          )}
-        </div>
-
-        <div className="campo">
-          <label htmlFor="equipoJugador">Equipo</label>
-          <select
-            id="equipoJugador"
-            name="team"
-            value={formik.values.team}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          >
-            <option value="">Seleccioná un equipo</option>
-            {equipos.map((equipo) => (
-              <option key={equipo.id} value={equipo.id}>
-                {equipo.name}
-              </option>
-            ))}
-          </select>
-
-          {formik.touched.team && formik.errors.team && (
-            <small className="error">{formik.errors.team}</small>
-          )}
-        </div>
-
-        <div className="campo">
-          <label htmlFor="imagenJugador">Fotografía del jugador</label>
-
-          <input
-            key={claveImagen}
-            type="file"
-            id="imagenJugador"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={seleccionarImagen}
-          />
-
-          <small>Formatos permitidos: JPG, PNG o WebP. Máximo 3 MB.</small>
-        </div>
-
-        {leyendoImagen && <p>Preparando imagen...</p>}
-
-        {vistaPrevia && (
-          <div>
-            <p>Vista previa:</p>
-
-            <img
-              src={vistaPrevia}
-              alt="Fotografía del jugador"
-              style={{
-                width: "120px",
-                height: "120px",
-                objectFit: "cover",
-                borderRadius: "8px",
-              }}
-            />
-          </div>
-        )}
-
-        {imagenBase64 && (
-          <button
-            type="button"
-            onClick={() => limpiarImagen(jugadorEditando?.image || "")}
-          >
-            Cancelar imagen seleccionada
-          </button>
-        )}
-
-        {mensaje && <p className="mensaje-exito">{mensaje}</p>}
-        {error && <p className="error">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={
-            (!formik.dirty && !imagenBase64) ||
-            !formik.isValid ||
-            formik.isSubmitting ||
-            leyendoImagen ||
-            equipos.length === 0
-          }
-        >
-          {formik.isSubmitting
-            ? "Guardando..."
-            : jugadorEditando
-              ? "Guardar cambios"
-              : "Crear jugador"}
-        </button>
-
-        {jugadorEditando && (
-          <button type="button" onClick={cancelarEdicion}>
-            Cancelar edición
-          </button>
-        )}
-      </form>
-
-      <h3>Jugadores registrados</h3>
-
-      {cargando ? (
-        <p>Cargando jugadores...</p>
-      ) : jugadores.length === 0 ? (
-        <p>No hay jugadores registrados.</p>
-      ) : (
+    <div className="admin-modulo admin-modulo-jugadores">
+      <div className="admin-modulo-cabecera">
         <div>
-          {jugadores.map((jugador) => {
-            const equipoJugador = equipos.find(
-              (equipo) => equipo.id === jugador.team,
-            );
-
-            return (
-              <div
-                key={jugador.id}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  padding: "12px",
-                  marginBottom: "12px",
-                }}
-              >
-                {jugador.image && (
-                  <img
-                    src={jugador.image}
-                    alt={`Fotografía de ${jugador.name}`}
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                    }}
-                  />
-                )}
-
-                <p>
-                  <strong>{jugador.name}</strong>
-                </p>
-
-                <p>Equipo: {equipoJugador?.name || "Sin equipo"}</p>
-
-                <button
-                  type="button"
-                  onClick={() => seleccionarJugador(jugador)}
-                >
-                  Editar
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => eliminarJugador(jugador.id)}
-                  disabled={eliminando}
-                >
-                  {eliminando ? "Procesando..." : "Eliminar"}
-                </button>
-              </div>
-            );
-          })}
+          <span className="admin-sobretitulo admin-sobretitulo-oscuro">
+            PLANTEL
+          </span>
+          <h2>Jugadores</h2>
+          <p>Administrá los jugadores de cada equipo y sus fotografías.</p>
         </div>
-      )}
+        <span className="admin-contador">{jugadores.length} registros</span>
+      </div>
+
+      <div className="admin-jugadores-layout">
+        <form
+          className="admin-formulario admin-formulario-jugadores"
+          onSubmit={formik.handleSubmit}
+          noValidate
+        >
+          <h3>{jugadorEditando ? "Editar jugador" : "Crear jugador"}</h3>
+
+          <div className="admin-jugador-campos">
+            <div className="campo">
+              <label htmlFor="nombreJugador">Nombre del jugador</label>
+              <input
+                type="text"
+                id="nombreJugador"
+                name="name"
+                placeholder="Ej.: Juan Pérez"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.name && formik.errors.name && (
+                <small className="error">{formik.errors.name}</small>
+              )}
+            </div>
+
+            <div className="campo">
+              <label htmlFor="equipoJugador">Equipo</label>
+              <select
+                id="equipoJugador"
+                name="team"
+                value={formik.values.team}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              >
+                <option value="">Seleccioná un equipo</option>
+                {equipos.map((equipo) => (
+                  <option key={equipo.id} value={equipo.id}>
+                    {equipo.name}
+                  </option>
+                ))}
+              </select>
+              {formik.touched.team && formik.errors.team && (
+                <small className="error">{formik.errors.team}</small>
+              )}
+            </div>
+          </div>
+
+          <div className="campo admin-campo-imagen">
+            <label htmlFor="imagenJugador">Fotografía del jugador</label>
+            <input
+              key={claveImagen}
+              type="file"
+              id="imagenJugador"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={seleccionarImagen}
+            />
+            <small>Formatos permitidos: JPG, PNG o WebP. Máximo 3 MB.</small>
+          </div>
+
+          {leyendoImagen && <p>Preparando imagen...</p>}
+
+          {vistaPrevia && (
+            <div className="admin-vista-previa">
+              <img src={vistaPrevia} alt="Fotografía del jugador" />
+              <div>
+                <strong>Vista previa</strong>
+                <p>Fotografía que se mostrará en el perfil del jugador.</p>
+              </div>
+            </div>
+          )}
+
+          {imagenBase64 && (
+            <button
+              type="button"
+              className="admin-boton-secundario admin-cancelar-imagen"
+              onClick={() => limpiarImagen(jugadorEditando?.image || "")}
+            >
+              Cancelar imagen seleccionada
+            </button>
+          )}
+
+          {mensaje && (
+            <p className="mensaje-exito" role="status">
+              {mensaje}
+            </p>
+          )}
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="admin-formulario-acciones">
+            <button
+              type="submit"
+              disabled={
+                (!formik.dirty && !imagenBase64) ||
+                !formik.isValid ||
+                formik.isSubmitting ||
+                leyendoImagen ||
+                equipos.length === 0
+              }
+            >
+              {formik.isSubmitting
+                ? "Guardando..."
+                : jugadorEditando
+                  ? "Guardar cambios"
+                  : "Crear jugador"}
+            </button>
+
+            {jugadorEditando && (
+              <button
+                type="button"
+                className="admin-boton-secundario"
+                onClick={cancelarEdicion}
+              >
+                Cancelar edición
+              </button>
+            )}
+          </div>
+        </form>
+
+        <div className="admin-panel-jugadores-listado">
+          <div className="admin-listado-cabecera">
+            <h3>Jugadores registrados</h3>
+            <span>{jugadores.length} en total</span>
+          </div>
+
+          {cargando ? (
+            <p className="admin-estado">Cargando jugadores...</p>
+          ) : jugadores.length === 0 ? (
+            <p className="admin-estado">No hay jugadores registrados.</p>
+          ) : (
+            <div className="admin-lista admin-lista-jugadores">
+              {jugadores.map((jugador) => {
+                const equipoJugador = equipos.find(
+                  (equipo) => equipo.id === jugador.team,
+                );
+
+                return (
+                  <article
+                    key={jugador.id}
+                    className="admin-registro admin-registro-jugador"
+                  >
+                    {jugador.image ? (
+                      <img
+                        className="admin-jugador-foto"
+                        src={jugador.image}
+                        alt={`Fotografía de ${jugador.name}`}
+                      />
+                    ) : (
+                      <div
+                        className="admin-jugador-sin-foto"
+                        aria-hidden="true"
+                      >
+                        {jugador.name?.charAt(0)?.toUpperCase() || "J"}
+                      </div>
+                    )}
+                    <div className="admin-registro-info">
+                      <strong>{jugador.name}</strong>
+                      <span>Equipo: {equipoJugador?.name || "Sin equipo"}</span>
+                    </div>
+                    <div className="admin-registro-acciones">
+                      <button
+                        type="button"
+                        className="admin-boton-editar"
+                        onClick={() => seleccionarJugador(jugador)}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-boton-eliminar"
+                        onClick={() => eliminarJugador(jugador.id)}
+                        disabled={eliminando}
+                      >
+                        {eliminando ? "Procesando..." : "Eliminar"}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

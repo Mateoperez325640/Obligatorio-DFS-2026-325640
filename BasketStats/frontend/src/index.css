@@ -1,9 +1,130 @@
+:root {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color: #14243d;
+  background: #f3f6fa;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+
+  /* Colores principales */
+  --color-primario: #14243d;
+  --color-secundario: #16a36a;
+  --color-secundario-hover: #108556;
+
+  /* Fondos */
+  --color-fondo: #f3f6fa;
+  --color-tarjeta: #ffffff;
+  --color-fondo-suave: #edf3f6;
+
+  /* Textos */
+  --color-texto: #14243d;
+  --color-texto-secundario: #62748b;
+
+  /* Bordes y estados */
+  --color-borde: #dce4ec;
+  --color-error: #c62828;
+  --color-exito: #15803d;
+
+  /* Medidas compartidas */
+  --radio: 12px;
+  --radio-grande: 18px;
+  --sombra: 0 6px 24px rgba(20, 36, 61, 0.07);
+}
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  min-width: 320px;
+  min-height: 100vh;
+
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+
+  color: var(--color-texto);
+  background: linear-gradient(160deg, #f7f9fc 0%, #edf4f3 100%);
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-top: 0;
+  color: var(--color-primario);
+  line-height: 1.3;
+}
+
+p {
+  line-height: 1.6;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(22, 163, 106, 0.35);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--color-secundario);
+}
+
+a:hover {
+  color: var(--color-secundario-hover);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

@@ -2,6 +2,52 @@ import Partido from "../models/match.model.js";
 import Equipo from "../models/team.model.js";
 import Categoria from "../models/category.model.js";
 import User from "../models/user.model.js";
+import { obtenerFeriadosUruguayService } from "./api-externa.service.js";
+
+const obtenerFechaTexto = (fecha) => {
+  if (fecha instanceof Date) {
+    return fecha.toISOString().substring(0, 10);
+  }
+
+  return String(fecha).substring(0, 10);
+};
+
+const validarFechaFeriado = async (fecha) => {
+  const fechaTexto = obtenerFechaTexto(fecha);
+  const anio = fechaTexto.substring(0, 4);
+
+  let feriados;
+
+  try {
+    feriados = await obtenerFeriadosUruguayService(anio);
+
+    if (!Array.isArray(feriados)) {
+      throw new Error("La API devolvió feriados inválidos.");
+    }
+  } catch (error) {
+    const errorFeriados = new Error(
+      "No se pudieron verificar los feriados de Uruguay. Intentá nuevamente.",
+    );
+    errorFeriados.statusCode = 503;
+    throw errorFeriados;
+  }
+
+  const feriadoEncontrado = feriados.find(
+    (feriado) => feriado?.date === fechaTexto,
+  );
+
+  if (feriadoEncontrado) {
+    const fechaFormateada = fechaTexto.split("-").reverse().join("/");
+
+    const error = new Error(
+      `No se puede programar un partido el ${fechaFormateada} ` +
+        `porque es feriado en Uruguay: ${feriadoEncontrado.name}.`,
+    );
+
+    error.statusCode = 400;
+    throw error;
+  }
+};
 
 export const crearPartido = async (partidoData, userId) => {
   const { localTeam, visitorTeam, category, localScore, visitorScore, date } =
@@ -60,6 +106,8 @@ export const crearPartido = async (partidoData, userId) => {
       throw error;
     }
   }
+
+  await validarFechaFeriado(date);
 
   const partido = await Partido.create({
     localTeam,
@@ -174,6 +222,15 @@ export const modificarPartido = async (partidoId, userId, data) => {
       const error = new Error("Categoría no encontrada");
       error.statusCode = 404;
       throw error;
+    }
+  }
+
+  if (data.date !== undefined) {
+    const fechaActual = obtenerFechaTexto(partido.date);
+    const fechaNueva = obtenerFechaTexto(data.date);
+
+    if (fechaNueva !== fechaActual) {
+      await validarFechaFeriado(data.date);
     }
   }
 

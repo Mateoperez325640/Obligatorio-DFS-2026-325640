@@ -20,6 +20,7 @@ import EditarPartido from "./EditarPartido.jsx";
 import InformeUso from "./InformeUso.jsx";
 import CambioPlan from "./CambioPlan.jsx";
 import GraficoPartidos from "./GraficoPartidos.jsx";
+import ResumenPartido from "./ResumenPartido.jsx";
 import {
   obtenerPartidosApi,
   eliminarPartidoApi,
@@ -369,6 +370,8 @@ function Dashboard() {
                         timeZone: "UTC",
                       })}
                     </p>
+
+                    <ResumenPartido idPartido={partido.id} />
 
                     <button
                       type="button"

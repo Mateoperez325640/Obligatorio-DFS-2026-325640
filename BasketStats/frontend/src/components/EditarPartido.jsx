@@ -11,6 +11,7 @@ import {
   obtenerPartidosApi,
   editarPartidoApi,
 } from "../services/partidosServices.js";
+import { buscarFeriadoPorFecha } from "../services/feriadosServices.js";
 import { actualizarPartidoSlice } from "../redux/features/partidosSlice.js";
 import { cargarCatalogosSlice } from "../redux/features/catalogosSlice.js";
 
@@ -163,6 +164,33 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
       setErrorGuardar("");
 
       try {
+        const fechaOriginal = partido?.date?.substring(0, 10);
+
+        if (valores.date !== fechaOriginal) {
+          let feriado;
+
+          try {
+            feriado = await buscarFeriadoPorFecha(valores.date);
+          } catch (error) {
+            setErrorGuardar(
+              "No se pudieron verificar los feriados de Uruguay. " +
+                "Intentá nuevamente antes de guardar el partido.",
+            );
+            return;
+          }
+
+          if (feriado) {
+            const fechaFormateada = valores.date.split("-").reverse().join("/");
+
+            setErrorGuardar(
+              `No se puede programar un partido el ${fechaFormateada} ` +
+                `porque es feriado en Uruguay: ${feriado.name}. ` +
+                "Seleccioná otra fecha.",
+            );
+            return;
+          }
+        }
+
         const datosPartido = {
           ...valores,
           localScore: Number(valores.localScore),
@@ -332,7 +360,10 @@ function EditarPartido({ idPartido, onPartidoActualizado, onVolver }) {
             id="date"
             name="date"
             value={formik.values.date}
-            onChange={formik.handleChange}
+            onChange={(evento) => {
+              formik.handleChange(evento);
+              setErrorGuardar("");
+            }}
             onBlur={formik.handleBlur}
           />
           {formik.touched.date && formik.errors.date && (

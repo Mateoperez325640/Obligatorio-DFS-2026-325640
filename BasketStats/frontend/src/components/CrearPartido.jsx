@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { crearPartidoApi } from "../services/partidosServices.js";
+import { buscarFeriadoPorFecha } from "../services/feriadosServices.js";
 import { agregarPartidoSlice } from "../redux/features/partidosSlice.js";
 
 const esquemaPartido = Yup.object({
@@ -50,6 +51,29 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
       setErrorGuardar("");
 
       try {
+        let feriado;
+
+        try {
+          feriado = await buscarFeriadoPorFecha(valores.date);
+        } catch (error) {
+          setErrorGuardar(
+            "No se pudieron verificar los feriados de Uruguay. " +
+              "Intentá nuevamente antes de guardar el partido.",
+          );
+          return;
+        }
+
+        if (feriado) {
+          const fechaFormateada = valores.date.split("-").reverse().join("/");
+
+          setErrorGuardar(
+            `No se puede crear un partido el ${fechaFormateada} ` +
+              `porque es feriado en Uruguay: ${feriado.name}. ` +
+              "Seleccioná otra fecha.",
+          );
+          return;
+        }
+
         const datosPartido = {
           ...valores,
           localScore: Number(valores.localScore),
@@ -216,7 +240,10 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
             id="date"
             name="date"
             value={formik.values.date}
-            onChange={formik.handleChange}
+            onChange={(evento) => {
+              formik.handleChange(evento);
+              setErrorGuardar("");
+            }}
             onBlur={formik.handleBlur}
           />
           {formik.touched.date && formik.errors.date && (
@@ -236,7 +263,7 @@ function CrearPartido({ onPartidoCreado, onVolver }) {
             categorias.length === 0
           }
         >
-          {formik.isSubmitting ? "Guardando..." : "Crear partido"}
+          {formik.isSubmitting ? "Verificando y guardando..." : "Crear partido"}
         </button>
       </form>
     </div>
